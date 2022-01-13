@@ -1,1 +1,3 @@
+
+echo installing...
 pip install -r requirements.txt

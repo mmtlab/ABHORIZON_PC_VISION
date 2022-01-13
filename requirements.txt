@@ -1,0 +1,2 @@
+#here the libraries for AB_CODE
+opencv-contrib-python
