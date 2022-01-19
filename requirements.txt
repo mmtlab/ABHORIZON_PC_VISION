@@ -1,2 +1,12 @@
 #here the libraries for AB_CODE
-opencv-contrib-python
+absl-py==0.13.0
+attrs==21.2.0
+dataclasses==0.8
+imutils==0.5.4
+mediapipe==0.8.3
+numpy==1.19.3
+opencv-contrib-python==4.5.3.56
+opencv-python==4.5.3.56
+pkg_resources==0.0.0
+protobuf==3.17.3
+six==1.16.0

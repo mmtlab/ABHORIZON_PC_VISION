@@ -11,48 +11,22 @@ import EVA
 import SKEL
 import ctypes
 
-
-
-
-
-
-
-
-def init():
-    config = configparser.RawConfigParser()
-    config.read('/home/bernardo/PycharmProjects/AB_POSE_MACHINE/config.ini')
-
-    #PORTS_INFO = dict(config.items('PORTS'))
-    #print("Configuration file : {}".format(PORTS_INFO))
-    #EX_INFO = dict(config.items('ALIAS'))#SEGMENT
-    #print("Configuration file : {}".format(EX_INFO))
-
-
-
-    #return PORTS_INFO
-
-
-
 if __name__ == "__main__":
     stage = ""
 
-
-    exercise_string = multiprocessing.Value("i",0)#(id esercizio)
+    exercise_string = multiprocessing.Value("i", 0) #(id esercizio)
     ex_count = multiprocessing.Value("i", 0)
 
     #deprecated: abbiamo la queue per i kp
     KeyPoints = multiprocessing.Array("i", 66) #dep
 
-
     string_from_tcp_ID = multiprocessing.Value("i", 0)
 
-    #ports_info = init()
     # printing main program process id
     print("ID of main process: {}".format(os.getpid()))
     #A variant of Queue that retrieves most recently added entriesfirst(last in, firstout).
     time.sleep(5)
     q = multiprocessing.Queue(maxsize=1)
-
 
     # creating processes
     #LIFO queue 1, gli interessa solo dell ultimo elemento prodotto dallo skeletonizzatore
