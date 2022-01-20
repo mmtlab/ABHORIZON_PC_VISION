@@ -15,6 +15,7 @@ echo "Ensure pip, setuptools, and wheel are up to date"
 
 sudo apt-get install python3-pip -y
 python3.6 -m pip install --upgrade pip setuptools wheel
+sudo update-alternatives  --set python /usr/bin/python3.6
 
 echo "python3 version : "
 python3 --version
