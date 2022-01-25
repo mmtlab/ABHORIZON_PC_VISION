@@ -10,8 +10,8 @@ import glob
 
 def capture():
 
-    width = 480
-    height = 240
+    width = 640
+    height = 480
 
     gst_str1 = ('nvarguscamerasrc sensor-id=0 ! ' + 'video/x-raw(memory:NVMM), ' +
                'width=(int)1280, height=(int)720, ' +
@@ -20,7 +20,7 @@ def capture():
                'video/x-raw, width=(int){}, height=(int){}, ' + 
                'format=(string)BGRx ! ' +
                'videoconvert ! appsink').format(width, height)
-    cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER) # video capture source camera (Here webcam of laptop) 
+    cap = cv2.VideoCapture(0) # video capture source camera (Here webcam of laptop) 
      # return a single frame in variable `frame`
 
     while(True):
@@ -55,10 +55,10 @@ def calibrate():
             else:
                 assert _img_shape == img.shape[:2], "All images must share the same size."
             gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-	    # Find the chess board corners
+        # Find the chess board corners
             ret, corners = cv2.findChessboardCorners(gray,CHECKERBOARD,cv2.CALIB_CB_ADAPTIVE_THRESH+cv2.CALIB_CB_FAST_CHECK+cv2.CALIB_CB_NORMALIZE_IMAGE)
             #print(corners)
-	    # If found, add object points, image points (after refining them)
+        # If found, add object points, image points (after refining them)
             if ret == True:
                 objpoints.append(objp)
                 cv2.cornerSubPix(gray,corners,(3,3),(-1,-1),subpix_criteria)
@@ -77,10 +77,10 @@ def calibrate():
 # You should replace these 3 lines with the output in calibration step
 
 def undistort(img):
-    DIM=(480, 240)
-    K=np.array([[293.5116081746901, 0.0, 243.25387145248732], [0.0, 260.4055747091259, 104.82988114365413], [0.0, 0.0, 1.0]])
-    D=np.array([[-0.03576268944984472], [0.057197056735017134], [-0.16392042989226446], [0.12922000339789327]])
-    
+    DIM=(640,480)
+    K=np.array([[499.95795693114394, 0.0, 299.98932387422747], [0.0, 499.81738564423085, 233.07326875070703], [0.0, 0.0, 1.0]])    
+    D=np.array([[-0.12616907524146279], [0.4164021464039151], [-1.6015342220517828], [2.094848806959125]])
+
     h,w = img.shape[:2]
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -101,10 +101,10 @@ if __name__ == '__main__':
     
 
     while(True):
-	    ret, frame = cap.read() # return a single frame in variable `frame`    
-	    undistorted_img=undistort(frame)
-	    cv2.imshow("undistorted", undistorted_img)
-	    cv2.waitKey(0)
+        ret, frame = cap.read() # return a single frame in variable `frame`    
+        undistorted_img=undistort(frame)
+        cv2.imshow("undistorted", undistorted_img)
+        cv2.waitKey(0)
     cap.release() 
     cv2.destroyAllWindows()
 '''

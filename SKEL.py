@@ -11,11 +11,33 @@ import socket
 import imutils
 
 
+
+
+def returnCameraIndexes():
+    # checks the first 10 indexes.
+    index = 0
+    arr = []
+    i = 10
+    while i > 0:
+        print("retry cap : ", index)
+        cap = cv2.VideoCapture(index)
+        print("cap status :" ,cap.isOpened())
+        
+        if cap.isOpened():
+            print("is open!")
+            arr.append(index)
+            cap.release()
+        index += 1
+        i -= 1
+    print(arr)
+    return arr
+
+
 def undistort(img):
-    DIM=(480, 240)
-    K=np.array([[293.5116081746901, 0.0, 243.25387145248732], [0.0, 260.4055747091259, 104.82988114365413], [0.0, 0.0, 1.0]])
-    D=np.array([[-0.03576268944984472], [0.057197056735017134], [-0.16392042989226446], [0.12922000339789327]])
-    
+    DIM=(640,480)
+    K=np.array([[499.95795693114394, 0.0, 299.98932387422747], [0.0, 499.81738564423085, 233.07326875070703], [0.0, 0.0, 1.0]])    
+    D=np.array([[-0.12616907524146279], [0.4164021464039151], [-1.6015342220517828], [2.094848806959125]])
+
     h,w = img.shape[:2]
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -26,8 +48,9 @@ class Stitcher:
   def __init__(self):
   # determine if we are using OpenCV v3.X and initialize the
   # cached homography matrix
-	  self.isv3 = imutils.is_cv3()
-	  self.cachedH = None
+      print("stitcher class inizialization")
+      self.isv3 = imutils.is_cv3()
+      self.cachedH = None
   def detectAndDescribe(self, image):
     # convert the image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -39,29 +62,32 @@ class Stitcher:
     # arrays
     kps = np.float32([kp.pt for kp in kps])
     # return a tuple of keypoints and features
+    print("detect and describe completed..")
     return (kps, features)
   def matchKeypoints(self, kpsA, kpsB, featuresA, featuresB,
-		ratio, reprojThresh):
-		# compute the raw matches and initialize the list of actual
-		# matches
+        ratio, reprojThresh):
+        # compute the raw matches and initialize the list of actual
+        # matches
     matcher = cv2.DescriptorMatcher_create("BruteForce")
     rawMatches = matcher.knnMatch(featuresA, featuresB, 2)
     matches = []
     # loop over the raw matches
     for m in rawMatches:
-	# ensure the distance is within a certain ratio of each
-	# other (i.e. Lowe's ratio test)
+    # ensure the distance is within a certain ratio of each
+    # other (i.e. Lowe's ratio test)
         if len(m) == 2 and m[0].distance < m[1].distance * ratio:
             matches.append((m[0].trainIdx, m[0].queryIdx))
     if len(matches) > 4:
-	# construct the two sets of points
+    # construct the two sets of points
         ptsA = np.float32([kpsA[i] for (_, i) in matches])
         ptsB = np.float32([kpsB[i] for (i, _) in matches])
-	# compute the homography between the two sets of points
+    # compute the homography between the two sets of points
         (H, status) = cv2.findHomography(ptsA, ptsB, cv2.RANSAC,reprojThresh)
-	# return the matches along with the homograpy matrix
-	# and status of each matched point
+    # return the matches along with the homograpy matrix
+    # and status of each matched point
+        print("dmatches, H, status completed..")
         return (matches, H, status)
+    
     # otherwise, no homograpy could be computed
     return None
   
@@ -88,6 +114,7 @@ class Stitcher:
       (imageA.shape[1] + imageB.shape[1], imageA.shape[0]))
     result[0:imageB.shape[0], 0:imageB.shape[1]] = imageB
     # return the stitched image
+    
     return result 
 
 
@@ -220,6 +247,7 @@ def skeletonizer(KP_global, EX_global, q):
     
     width = 480
     height = 240
+    '''
 
     gst_str1 = ('nvarguscamerasrc sensor-id=0 ! ' + 'video/x-raw(memory:NVMM), ' +
           'width=(int)1280, height=(int)720, ' +
@@ -236,28 +264,47 @@ def skeletonizer(KP_global, EX_global, q):
           'format=(string)BGRx ! ' +
           'videoconvert ! appsink').format(width, height)
     gst_str3 = "0"
+    '''
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 5000
 
     fs = sender.FrameSegment(s, port)
     #stitcher serve per fondere due immagini da due camere
+    print("try creating stitcher...")
     stitcher = Stitcher()
+    camera_index = returnCameraIndexes()
+    print("length camera index : ",len(camera_index))
+    if len(camera_index) == 2:
+        print("2 camera system")
     
+        cap = cv2.VideoCapture(camera_index[0])
+        cap1 = cv2.VideoCapture(camera_index[1])
+        frame_width2 = int(cap.get(3))
+        frame_height2 = int(cap.get(4))
+        print(frame_width2,frame_height2)
 
+        frame_width1 = int(cap1.get(3))
+        frame_height1 = int(cap1.get(4))
+    elif len(camera_index) == 1:
+        print("1 camera system")
+        cap = cv2.VideoCapture(camera_index[0])
+        frame_width2 = int(cap.get(3))
+        frame_height2 = int(cap.get(4))
+        print(frame_width2,frame_height2)
 
-    cap = cv2.VideoCapture(0)
+    
+    
+    else:
+        print("not enough camera aviable: camera numer = ",len(camera_index))
+        return 0
 
     #cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER)
 
     #cap1 = cv2.VideoCapture(gst_str2, cv2.CAP_GSTREAMER) 
     
     #print("now i show you")
-    frame_width2 = int(cap.get(3))
-    frame_height2 = int(cap.get(4))
-
-    #frame_width1 = int(cap1.get(3))
-    #frame_height1 = int(cap1.get(4))
+    
     #frame_width = int(cap1.get(3))
     #frame_height = int(cap1.get(4))*2
 
@@ -271,20 +318,36 @@ def skeletonizer(KP_global, EX_global, q):
             min_detection_confidence=0.8,
             min_tracking_confidence=0.8) as pose:
         print("start loop")
-        print(cap.isOpened())
+        
+        if len(camera_index) == 2:
+            print("is cap0 opened ?: ",cap.isOpened())
+            print("is cap1 opened ?: ",cap1.isOpened())
+        
+        elif len(camera_index) == 1:
+            print("is cap0 opened ?: ",cap.isOpened())
+        
+        
         while cap.isOpened():
 
             start = time.time()
+            
             success, image = cap.read()
+            image=undistort(image)
+            #image1=undistort(image1)
             #print("read image succes")
-            #success1, image1 = cap1.read()
+            if len(camera_index) == 2:
+                success1, image1 = cap1.read()
+                image1=undistort(image1)
+                
 
             if not success:
-                # print("Ignoring empty camera frame.")
+                print("Ignoring empty camera0 frame.")
                 # If loading a video, use 'break' instead of 'continue'.
                 return False
-            #if not success1:
-                #return False  
+            if len(camera_index) == 2:
+                if not success1:
+                    print("Ignoring empty camera2 frame.")
+                    return False  
             #image = cv2.rotate(image,cv2.ROTATE_180)
             #image1 = cv2.rotate(image1,cv2.ROTATE_180)
             
@@ -305,13 +368,20 @@ def skeletonizer(KP_global, EX_global, q):
             
             
 
-            #camere smontate
+            #2camere smontate____
             #sti = np.concatenate((image,image1), axis= 1)
-            #camere montate stitcher
-            #sti = stitcher.stitch([image1, image])
-            #monocamere
-            #
-            sti = image  
+            #2camere montate stitcher___
+            #print("calling stitcher function...")
+            if len(camera_index) == 2:
+                sti = stitcher.stitch([image1, image])
+                #monocamera___
+                #sti = image
+                
+            else:
+                sti = image
+                
+            sti = cv2.flip(sti, 1)
+            
 
 
 
@@ -330,7 +400,7 @@ def skeletonizer(KP_global, EX_global, q):
 
                 #sti = np.concatenate((image,image1[550:720, 0:480]), axis= 0)
 
-                sti = cv2.cvtColor(cv2.flip(sti, 1), cv2.COLOR_BGR2RGB)
+                sti = cv2.cvtColor(sti, cv2.COLOR_BGR2RGB)
                 #print("sti creted")
 
                 # To improve performance, optionally mark the image as not writeable to
@@ -348,8 +418,7 @@ def skeletonizer(KP_global, EX_global, q):
                 end = time.time()
                 seconds = end - start
                 fps = 1 / seconds
-                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (frame_width2 - 190, 30), cv2.FONT_HERSHEY_COMPLEX, 1,
-                            255)
+                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (frame_width2 - 190, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,255))
                 # Render detections
                 mp_drawing.draw_landmarks(sti, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
                                           mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
