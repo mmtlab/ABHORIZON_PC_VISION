@@ -10,6 +10,13 @@ import receiver
 import sender
 import statistics
 import queue
+import csv
+
+def write_data_csv(data):
+    f = open('data.csv', 'a')
+    writer = csv.writer(f)
+        
+    writer.writerow(data)
 
 def joint_distance_calculator(kps_to_render,kp):
     distance = []
@@ -265,6 +272,8 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
                     # print(kp[segment[5]])
                     a = findAngle((kp[segment[0]], kp[segment[1]]), (kp[segment[2]], kp[segment[3]]),
                                   (kp[segment[4]], kp[segment[5]]))
+                    #write_data_csv([int(a)])
+                    
                     angle.append(a)
                     # print("angle from EVA : {}".format(angle))
                     p = np.interp(a, (10, 160), (100, 0))

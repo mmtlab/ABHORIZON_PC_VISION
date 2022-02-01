@@ -11,6 +11,11 @@ import socket
 import imutils
 
 
+def write_data(data):
+    f = open('dati_pose.csv', 'a')
+    writer = csv.writer(f)
+
+    writer.writerow([data])
 
 
 def returnCameraIndexes():
@@ -332,12 +337,12 @@ def skeletonizer(KP_global, EX_global, q):
             start = time.time()
             
             success, image = cap.read()
-            image=undistort(image)
+            #image=undistort(image)
             #image1=undistort(image1)
             #print("read image succes")
             if len(camera_index) == 2:
                 success1, image1 = cap1.read()
-                image1=undistort(image1)
+                #image1=undistort(image1)
                 
 
             if not success:
@@ -349,7 +354,7 @@ def skeletonizer(KP_global, EX_global, q):
                     print("Ignoring empty camera2 frame.")
                     return False  
             #image = cv2.rotate(image,cv2.ROTATE_180)
-            #image1 = cv2.rotate(image1,cv2.ROTATE_180)
+            image1 = cv2.rotate(image1,cv2.ROTATE_180)
             
              
             #due tipi di stichetr diversi quado le camere saranno montate stai pronto e usane uno.
@@ -373,7 +378,8 @@ def skeletonizer(KP_global, EX_global, q):
             #2camere montate stitcher___
             #print("calling stitcher function...")
             if len(camera_index) == 2:
-                sti = stitcher.stitch([image1, image])
+                sti = np.concatenate((image,image1), axis= 1)
+                #sti = stitcher.stitch([image1, image])
                 #monocamera___
                 #sti = image
                 
@@ -400,7 +406,7 @@ def skeletonizer(KP_global, EX_global, q):
 
                 #sti = np.concatenate((image,image1[550:720, 0:480]), axis= 0)
 
-                sti = cv2.cvtColor(sti, cv2.COLOR_BGR2RGB)
+                #sti = cv2.cvtColor(sti, cv2.COLOR_BGR2RGB)
                 #print("sti creted")
 
                 # To improve performance, optionally mark the image as not writeable to
