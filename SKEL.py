@@ -9,10 +9,10 @@ import configparser
 import numpy as np
 import socket
 import imutils
-
+import csv
 
 def write_data(data):
-    f = open('dati_pose.csv', 'a')
+    f = open('dati_ditort_time.csv', 'a')
     writer = csv.writer(f)
 
     writer.writerow([data])
@@ -44,8 +44,15 @@ def undistort(img):
     D=np.array([[-0.12616907524146279], [0.4164021464039151], [-1.6015342220517828], [2.094848806959125]])
 
     h,w = img.shape[:2]
+    #start = time.time()
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+    #end = time.time()
+    #seconds = end - start
+    #start1 = time.time()
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    #end1 = time.time()
+    #seconds1 = end1 - start1
+    #write_data([seconds,seconds1])
     return undistorted_img
 
 
@@ -342,6 +349,11 @@ def skeletonizer(KP_global, EX_global, q):
             #print("read image succes")
             if len(camera_index) == 2:
                 success1, image1 = cap1.read()
+                image=undistort(image)
+                image1=undistort(image1)
+                image1 = cv2.rotate(image1,cv2.ROTATE_180)
+                #cv2.putText(image, 'img 1', (300, 200), cv2.FONT_HERSHEY_COMPLEX, 3, (255,0,255), 3)
+                #cv2.putText(image1, 'img 2', (300, 200), cv2.FONT_HERSHEY_COMPLEX, 3, (255,0,255), 3)
                 #image1=undistort(image1)
                 
 
@@ -354,7 +366,7 @@ def skeletonizer(KP_global, EX_global, q):
                     print("Ignoring empty camera2 frame.")
                     return False  
             #image = cv2.rotate(image,cv2.ROTATE_180)
-            image1 = cv2.rotate(image1,cv2.ROTATE_180)
+            #image1 = cv2.rotate(image1,cv2.ROTATE_180)
             
              
             #due tipi di stichetr diversi quado le camere saranno montate stai pronto e usane uno.
@@ -378,14 +390,16 @@ def skeletonizer(KP_global, EX_global, q):
             #2camere montate stitcher___
             #print("calling stitcher function...")
             if len(camera_index) == 2:
-                sti = np.concatenate((image,image1), axis= 1)
-                #sti = stitcher.stitch([image1, image])
+                #sti = np.concatenate((image1,image), axis= 1)
+                sti = stitcher.stitch([image1, image])
                 #monocamera___
                 #sti = image
                 
             else:
                 sti = image
                 
+            sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
+    
             sti = cv2.flip(sti, 1)
             
 
@@ -424,7 +438,7 @@ def skeletonizer(KP_global, EX_global, q):
                 end = time.time()
                 seconds = end - start
                 fps = 1 / seconds
-                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (frame_width2 - 190, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,255))
+                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (frame_width2-300, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
                 # Render detections
                 mp_drawing.draw_landmarks(sti, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
                                           mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
