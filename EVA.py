@@ -377,4 +377,4 @@ def evaluator(EX_global, q,string_from_tcp_ID):
                 packet = str(max(count)) + "," + str(int(max(per)))   
                 print("packet", packet)             
                 
-                sender.send_status(21011, packet,'192.168.10.2')
+                sender.send_status(21011, packet,'127.0.0.1')
