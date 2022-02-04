@@ -11,8 +11,218 @@ import socket
 import imutils
 import csv
 
+
+
+
+
+def warpImages(img1, img2, H):
+    rows1, cols1 = img1.shape[:2]
+    rows2, cols2 = img2.shape[:2]
+
+    list_of_points_1 = np.float32([[0, 0], [0, rows1], [cols1, rows1], [cols1, 0]]).reshape(-1, 1, 2)
+    temp_points = np.float32([[0, 0], [0, rows2], [cols2, rows2], [cols2, 0]]).reshape(-1, 1, 2)
+
+    # When we have established a homography we need to warp perspective
+    # Change field of view
+    list_of_points_2 = cv2.perspectiveTransform(temp_points, H)
+
+    list_of_points = np.concatenate((list_of_points_1, list_of_points_2), axis=0)
+
+    [x_min, y_min] = np.int32(list_of_points.min(axis=0).ravel() - 0.5)
+    [x_max, y_max] = np.int32(list_of_points.max(axis=0).ravel() + 0.5)
+
+    translation_dist = [-x_min, -y_min]
+
+    H_translation = np.array([[1, 0, translation_dist[0]], [0, 1, translation_dist[1]], [0, 0, 1]])
+
+    output_img = cv2.warpPerspective(img2, H_translation.dot(H), (x_max - x_min, y_max - y_min))
+    output_img[translation_dist[1]:rows1 + translation_dist[1], translation_dist[0]:cols1 + translation_dist[0]] = img1
+
+    return output_img
+
+
+def draw_matches(img1, keypoints1, img2, keypoints2, matches):
+    r, c = img1.shape[:2]
+    r1, c1 = img2.shape[:2]
+
+    # Create a blank image with the size of the first image + second image
+    output_img = np.zeros((max([r, r1]), c + c1, 3), dtype='uint8')
+    output_img[:r, :c, :] = np.dstack([img1, img1, img1])
+    output_img[:r1, c:c + c1, :] = np.dstack([img2, img2, img2])
+
+    # Go over all of the matching points and extract them
+    for match in matches:
+        img1_idx = match.queryIdx
+        img2_idx = match.trainIdx
+        (x1, y1) = keypoints1[img1_idx].pt
+        (x2, y2) = keypoints2[img2_idx].pt
+
+        # Draw circles on the keypoints
+        cv2.circle(output_img, (int(x1), int(y1)), 4, (0, 255, 255), 1)
+        cv2.circle(output_img, (int(x2) + c, int(y2)), 4, (0, 255, 255), 1)
+
+        # Connect the same keypoints
+        cv2.line(output_img, (int(x1), int(y1)), (int(x2) + c, int(y2)), (0, 255, 255), 1)
+
+    return output_img
+
+
+def align_image_panorama(img1,img2):
+
+
+    img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+    #cv2.imshow("q",img1_gray)
+    #cv2.imshow("qdd",img2_gray)
+    # Create our ORB detector and detect keypoints and descriptors
+    orb = cv2.ORB_create(nfeatures=2000)
+
+    # Find the key points and descriptors with ORB
+    keypoints1, descriptors1 = orb.detectAndCompute(img1_gray, None)
+    keypoints2, descriptors2 = orb.detectAndCompute(img2_gray, None)
+    #cv2.imshow("qnjnq",cv2.drawKeypoints(img1, keypoints1, None, (255, 0, 255))
+    #cv2.imshow("qqjbi",cv2.drawKeypoints(img2, keypoints2, None, (255, 0, 255)))
+    # Create a BFMatcher object.
+    # It will find all of the matching keypoints on two images
+    bf = cv2.BFMatcher_create(cv2.NORM_HAMMING)
+
+    # Find matching points
+    matches = bf.knnMatch(descriptors1, descriptors2, k=2)
+
+    #print(keypoints1[0].pt)
+    #print(keypoints1[0].size)
+    #print("Descriptor of the first keypoint: ")
+    #print(descriptors1[0])
+    #print(matches_sorted[0].distance)
+    '''
+    all_matches = []
+    #find all match
+    for m, n in matches:
+        all_matches.append(m)
+
+    img3 = draw_matches(img1_gray, keypoints1, img2_gray, keypoints2, all_matches[:30])
+    cv2.imshow("rr",img3)
+    '''
+    # Finding the best matches 0.6 threshold
+    good = []
+    for m, n in matches:
+        if m.distance < 0.6 * n.distance:
+            good.append(m)
+    #cv2.imshow("1_withkp",cv2.drawKeypoints(img1, [keypoints1[m.queryIdx] for m in good], None, (255, 0, 255)))
+    #cv2.imshow("2_withkp",cv2.drawKeypoints(img2, [keypoints2[m.trainIdx] for m in good], None, (255, 0, 255)))
+
+    # Set minimum match condition
+    MIN_MATCH_COUNT = 10
+
+    if len(good) > MIN_MATCH_COUNT:
+        # Convert keypoints to an argument for findHomography
+        src_pts = np.float32([keypoints1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+        # Establish a homography
+        M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        write_data(M)
+
+        result = warpImages(img2, img1, M)# da chiamare ogni frame
+        return result
+
+
+
+
+
+
+
+
+
+
+def cv_stitcher(img1,img2):
+    images = []
+
+
+    images.append(img1)
+    images.append(img2)
+
+    # use built in stitcher
+    stitcher = cv2.createStitcher()
+    (status, stitched) = stitcher.stitch(images);
+    return stitched
+
+
+def alignImages(imPost, imPre, max_features, good_match_percent):
+    #cri function
+    ''' Function that performs the alignment between two images according to a set
+    of features detected in both images that it tries to match automatically.
+    It computes the homography between the two images using the keypoints detected
+    and filtered according to the good_match_percent set by the user.
+
+    INPUTS:
+    - imPost: image to align to the second one. In the app it should be the POST image
+    - imPre: reference image used as template. In the app it should be the PRE image
+    - max_features: int number representing the number of ORB features to find.
+                    Since these features get filtered later on it is best to set
+                    this value around 200+ to ensure a good number of features to use
+    - good_match_percent: a number < 0 representing the threshold to keep or discard a feature.
+                          If lower, less features are kept.
+    - debug: flag used to visualize image outputs
+    - log: logger needed to print logs on terminal
+
+    OUTPUTS:
+    - imPostReg: the original POST image warped according to the computed homography
+    - h: the computed homography matrix
+    '''
+
+    #log.debug('Callign alignment algorithm with max features to detect = ' + str(max_features) + ' and good match % = ' + str(good_match_percent))
+
+    imPostGray = cv2.cvtColor(imPost, cv2.COLOR_BGR2GRAY)
+    imPreGray = cv2.cvtColor(imPre, cv2.COLOR_BGR2GRAY)
+
+    # detect ORB features and compute descriptors
+    orb = cv2.ORB_create(max_features)
+    keypoints1, descriptors1 = orb.detectAndCompute(imPostGray, None)
+    keypoints2, descriptors2 = orb.detectAndCompute(imPreGray, None)
+
+    # match features
+    matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+    matches = matcher.match(descriptors1, descriptors2, None)
+
+    # sort matches by score
+    matches.sort(key=lambda x: x.distance, reverse=False)
+
+    # remove not so good matches
+    # since matches is now sorted according to score (features with a lower match score are
+    # near the bottom of the array), this filtering is easily done by selecting only
+    # the first % of matches according to good_match_percent
+    numGoodMatches = int(len(matches) * good_match_percent)
+    matches = matches[:numGoodMatches]
+
+
+    # draw the filtered matches on the images
+    imMatches = cv2.drawMatches(imPost, keypoints1, imPre, keypoints2, matches, None)
+    #visualize('matches', imMatches, (100, 100))
+
+    # extract location of good matches
+    points1 = np.zeros((len(matches), 2), dtype=np.float32)
+    points2 = np.zeros((len(matches), 2), dtype=np.float32)
+
+    for i, match in enumerate(matches):
+        points1[i, :] = keypoints1[match.queryIdx].pt
+        points2[i, :] = keypoints2[match.trainIdx].pt
+
+    # find homography
+    h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
+
+    # use homography to align the POST image to the PRE one
+    height, width, channels = imPre.shape
+    imPostReg = cv2.warpPerspective(imPost, h, (width, height))
+
+   # if debug == True:
+        #visualize('aligned', imPostReg, (100, 100))
+
+    return imPostReg,imMatches, h
+
 def write_data(data):
-    f = open('dati_ditort_time.csv', 'a')
+    f = open('homografy.csv', 'a')
     writer = csv.writer(f)
 
     writer.writerow([data])
@@ -24,12 +234,12 @@ def returnCameraIndexes():
     arr = []
     i = 10
     while i > 0:
-        print("retry cap : ", index)
+        #print("retry cap : ", index)
         cap = cv2.VideoCapture(index)
         print("cap status :" ,cap.isOpened())
         
         if cap.isOpened():
-            print("is open!")
+            print("is open! index =",index)
             arr.append(index)
             cap.release()
         index += 1
@@ -54,7 +264,7 @@ def undistort(img):
     #seconds1 = end1 - start1
     #write_data([seconds,seconds1])
     return undistorted_img
-
+#old stitcher
 
 class Stitcher:
   def __init__(self):
@@ -94,16 +304,16 @@ class Stitcher:
         ptsA = np.float32([kpsA[i] for (_, i) in matches])
         ptsB = np.float32([kpsB[i] for (i, _) in matches])
     # compute the homography between the two sets of points
-        (H, status) = cv2.findHomography(ptsA, ptsB, cv2.RANSAC,reprojThresh)
+        (H, status) = cv2.findHomography(ptsA, ptsB, cv2.RANSAC, reprojThresh)
     # return the matches along with the homograpy matrix
     # and status of each matched point
-        print("dmatches, H, status completed..")
-        return (matches, H, status)
+        print("dmatches, H, status completed..", len(matches))
+        return (matches, H, status, ptsA, ptsB)
     
     # otherwise, no homograpy could be computed
     return None
   
-  def stitch(self, images, ratio=0.75, reprojThresh=4.0):
+  def stitch(self, images, ratio=0.85, reprojThresh=4.0):
     # unpack the images
     (imageB, imageA) = images
     # if the cached homography matrix is None, then we need to
@@ -112,10 +322,26 @@ class Stitcher:
         # detect keypoints and extract
         (kpsA, featuresA) = self.detectAndDescribe(imageA)
         (kpsB, featuresB) = self.detectAndDescribe(imageB)
+        #print(kpsA[0][0])
+        
         # match features between the two images
         M = self.matchKeypoints(kpsA, kpsB, featuresA, featuresB, ratio, reprojThresh)
         # if the match is None, then there aren't enough matched
         # keypoints to create a panorama
+        imA = imageA.copy()
+        imB = imageB.copy()
+        cv2.imwrite("img1.jpg",imA)
+        cv2.imwrite("img2.jpg",imB)
+        
+        ptsA = M[3]
+        ptsB = M[4]
+        for i in range(0, len(ptsA)):
+            imA = cv2.circle(imA, (int(ptsA[i][0]), int(ptsA[i][1])), 5, (0,0,255),1 )
+        cv2.imwrite("kp.jpg",imA)
+        for i in range(0,len(ptsB)):
+            imB = cv2.circle(imB, (int(ptsB[i][0]), int(ptsB[i][1])), 5, (0,0,255),1 )
+        cv2.imwrite("kpb.jpg",imB)
+        
         if M is None:
           return None
         # cache the homography matrix
@@ -351,7 +577,9 @@ def skeletonizer(KP_global, EX_global, q):
                 success1, image1 = cap1.read()
                 image=undistort(image)
                 image1=undistort(image1)
-                image1 = cv2.rotate(image1,cv2.ROTATE_180)
+                #image1 = cv2.rotate(image1,cv2.ROTATE_180)
+                #image1 = cv2.rotate(image1,cv2.ROTATE_90_COUNTERCLOCKWISE)
+                #image = cv2.rotate(image,cv2.ROTATE_90_COUNTERCLOCKWISE)
                 #cv2.putText(image, 'img 1', (300, 200), cv2.FONT_HERSHEY_COMPLEX, 3, (255,0,255), 3)
                 #cv2.putText(image1, 'img 2', (300, 200), cv2.FONT_HERSHEY_COMPLEX, 3, (255,0,255), 3)
                 #image1=undistort(image1)
@@ -390,17 +618,24 @@ def skeletonizer(KP_global, EX_global, q):
             #2camere montate stitcher___
             #print("calling stitcher function...")
             if len(camera_index) == 2:
-                #sti = np.concatenate((image1,image), axis= 1)
-                sti = stitcher.stitch([image1, image])
+                #sti = cv_stitcher(image,image1)
+                #cv2.imwrite("sti.jpg",sti)
+                #break
+                #sti = np.concatenate((image,image1), axis= 1)
+                sti = align_image_panorama(image, image1)
+            
+                #sti = stitcher.stitch([image, image1])
+                #sti = np.concatenate((image,image1[0:frame_width1, 0:frame_height1]), axis= 1)
+                #sti, postM, h  = alignImages(image,image1,250,0.5)
                 #monocamera___
                 #sti = image
                 
             else:
                 sti = image
                 
-            sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
+            #sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
     
-            sti = cv2.flip(sti, 1)
+            #sti = cv2.flip(sti, 1)
             
 
 
@@ -434,7 +669,7 @@ def skeletonizer(KP_global, EX_global, q):
 
                 # Draw the pose annotation on the image.
                 sti.flags.writeable = True
-                sti = cv2.cvtColor(sti, cv2.COLOR_RGB2BGR)
+                #sti = cv2.cvtColor(sti, cv2.COLOR_RGB2BGR)
                 end = time.time()
                 seconds = end - start
                 fps = 1 / seconds
