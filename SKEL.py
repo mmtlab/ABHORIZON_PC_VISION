@@ -15,6 +15,29 @@ import csv
 
 
 
+def ex_string_to_ID(ex_string):
+    # read from ex_info
+    config = configparser.ConfigParser()
+    config.read('exercise_info.ini')
+    sections = config.sections()
+    # print("sections are : {}".format(sections))
+    ex_string=ex_string.rstrip("\n")
+    for exercise in sections:
+
+        if exercise == ex_string:
+            # config.get("test", "foo")
+
+            ID = int(config.get(exercise, 'ID'))
+            return ID
+
+    print("no exercise found")
+    ID = 0
+    return ID
+
+
+
+
+
 def warpImages(img1, img2, H):
     rows1, cols1 = img1.shape[:2]
     rows2, cols2 = img2.shape[:2]
@@ -568,15 +591,31 @@ def skeletonizer(KP_global, EX_global, q):
         while cap.isOpened():
 
             start = time.time()
+            ex_string = read_shared_mem_for_ex_string(EX_global.value)
+            ID = ex_string_to_ID(ex_string)
             
-            success, image = cap.read()
+            
             #image=undistort(image)
             #image1=undistort(image1)
             #print("read image succes")
             if len(camera_index) == 2:
-                success1, image1 = cap1.read()
+                if ID >= 50 and ID <= 60 :
+                    success, image = cap1.read()
+                else:
+                    success, image = cap.read()
+                    
                 image=undistort(image)
-                image1=undistort(image1)
+            else:
+                success, image = cap.read()
+                image=undistort(image)
+                
+                
+                
+                
+                
+                
+                #image=undistort(image)
+                #image1=undistort(image1)
                 #image1 = cv2.rotate(image1,cv2.ROTATE_180)
                 #image1 = cv2.rotate(image1,cv2.ROTATE_90_COUNTERCLOCKWISE)
                 #image = cv2.rotate(image,cv2.ROTATE_90_COUNTERCLOCKWISE)
@@ -622,7 +661,8 @@ def skeletonizer(KP_global, EX_global, q):
                 #cv2.imwrite("sti.jpg",sti)
                 #break
                 #sti = np.concatenate((image,image1), axis= 1)
-                sti = align_image_panorama(image, image1)
+                #sti = align_image_panorama(image, image1)
+                sti = image
             
                 #sti = stitcher.stitch([image, image1])
                 #sti = np.concatenate((image,image1[0:frame_width1, 0:frame_height1]), axis= 1)
@@ -648,7 +688,7 @@ def skeletonizer(KP_global, EX_global, q):
             
             #assert status == 0 # Verify returned status is 'success'
 
-            ex_string = read_shared_mem_for_ex_string(EX_global.value)
+            
             # render in front of ex_string
             if ex_string != "":
 
