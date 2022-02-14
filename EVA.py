@@ -58,7 +58,7 @@ def ex_string_to_ID(ex_string):
             ID = int(config.get(exercise, 'ID'))
             return ID
 
-    print("no exercise found")
+    #print("no exercise found")
     ID = 0
     return ID
 
@@ -78,7 +78,7 @@ def ID_to_ex_string(ID):
 
             return ex_string
 
-    print("no exercise found")
+    #print("no exercise found")
     ex_string = "0"
     return ex_string
 
@@ -132,7 +132,7 @@ def ex_string_to_config_param(ex_string):
 
             return dictionary
 
-    print("no exercise found")
+    #print("no exercise found")
     dictionary = {}
     return dictionary
 
