@@ -10,7 +10,7 @@ import numpy as np
 import socket
 import imutils
 import csv
-
+from datetime import datetime
 
 
 
@@ -34,6 +34,27 @@ def ex_string_to_ID(ex_string):
     ID = 0
     return ID
 
+
+def writeCSVdata(ID,landmarks):
+    file = open('./data/subject_n_ex_m.csv', 'a')
+    writer = csv.writer(file)
+    now = datetime.now()
+    time = now.strftime("%d/%m/%Y %H:%M:%S")
+
+
+
+    keypoints = []
+    keypoints.append(ID)
+    keypoints.append(time)
+
+
+
+    for index, landmark in enumerate(landmarks.landmark):
+        keypoints.append(landmark.x)
+        keypoints.append(landmark.y)
+        keypoints.append(landmark.z)
+    writer.writerow(keypoints)
+    file.close()
 
 
 
@@ -69,14 +90,22 @@ class Undistorter:
     def __init__(self):
         self.cachedM1 = None
         self.cachedM2 = None
+        self.cachedM1180 = None
+        self.cachedM2180 = None
     def undistortOPT(self, img):
 
         if self.cachedM1 is None or self.cachedM2 is None:
             print("calculating map1 and map 2")
             #calc map1,map2
             DIM=(640,480)
+            
+            K = np.array([[236.75101538649935, 0.0, 309.9021941455992], [0.0, 236.2446439123776, 241.05082505485547], [0.0, 0.0, 1.0]])
+            D = np.array([[-0.035061160585193776], [0.0019371574878152896], [-0.0109780009702086], [0.003567547827103574]])
+            '''
+            
             K=np.array([[499.95795693114394, 0.0, 299.98932387422747], [0.0, 499.81738564423085, 233.07326875070703], [0.0, 0.0, 1.0]])    
             D=np.array([[-0.12616907524146279], [0.4164021464039151], [-1.6015342220517828], [2.094848806959125]])
+            '''
             h,w = img.shape[:2]
             map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
             print("DONE! completed map1 and 2, dim = ", map1.shape, map2.shape)
@@ -95,8 +124,38 @@ class Undistorter:
         undistorted_img = cv2.remap(img, self.cachedM1, self.cachedM2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         return undistorted_img
         
+    def undistortOPT180(self,img):
         
-     
+        if self.cachedM1180 is None or self.cachedM2180 is None:
+            print("calculating m1, m2 180")
+ 
+            K = np.array([[256.08951474686006, 0.0, 338.0670093090018], [0.0, 256.106658840997, 249.32266973335038], [0.0, 0.0, 1.0]])
+            D = np.array([[-0.03532111776488767], [-0.015025999952290566], [0.00976541095811982], [-0.0033155746136321975]])
+           
+            #calc map1,map2
+            DIM=(640,480)
+                
+            
+            h,w = img.shape[:2]
+            map1180, map2180 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+            print("DONE! completed map1 and 2, dim = ", map1180.shape, map2180.shape)
+            
+            if map1180 is None or map2180 is None:
+                print("ERROR no map calculated")
+                return None
+                
+        # cache the homography matrix
+            self.cachedM1180 = map1180
+            self.cachedM2180 = map2180
+            print("saved map1 and 2 180")
+        
+            #print("DONE! completed map1 and 2, dim = ", (self.cachedM1).shape, (self.cachedM2).shape)
+
+        undistorted_img = cv2.remap(img, self.cachedM1180, self.cachedM2180, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        return undistorted_img
+        
+        
+        
 
 
 
@@ -360,26 +419,6 @@ def skeletonizer(KP_global, EX_global, q):
     # printing process id
     print("ID of process running worker1: {}".format(os.getpid()))
     
-    width = 480
-    height = 240
-    '''
-
-    gst_str1 = ('nvarguscamerasrc sensor-id=0 ! ' + 'video/x-raw(memory:NVMM), ' +
-          'width=(int)1280, height=(int)720, ' +
-          'format=(string)NV12, framerate=(fraction)30/1 ! ' + 
-          'nvvidconv flip-method=2 ! ' + 
-          'video/x-raw, width=(int){}, height=(int){}, ' + 
-          'format=(string)BGRx ! ' +
-          'videoconvert ! appsink').format(width, height)
-    gst_str2 = ('nvarguscamerasrc sensor-id=1 ! ' + 'video/x-raw(memory:NVMM), ' +
-          'width=(int)1280, height=(int)720, ' +
-          'format=(string)NV12, framerate=(fraction)30/1 ! ' + 
-          'nvvidconv flip-method=2 ! ' + 
-          'video/x-raw, width=(int){}, height=(int){}, ' + 
-          'format=(string)BGRx ! ' +
-          'videoconvert ! appsink').format(width, height)
-    gst_str3 = "0"
-    '''
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 5000
@@ -454,20 +493,25 @@ def skeletonizer(KP_global, EX_global, q):
             #print("read image succes")
             if len(camera_index) == 2:
                 if ID >= 50 and ID <= 60 :
-                    success, image = cap1.read()
-                    image = undistorter.undistortOPT(image)
+                    success, image = cap.read()
+                    image = undistorter.undistortOPT180(image)
+                    image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
                     
                    
                 else:
-                    success, image = cap.read()
-                    image = cv2.rotate(image,cv2.ROTATE_180)
+                    success, image = cap1.read()
+                    
                     #image=undistort(image)
                     image = undistorter.undistortOPT(image)
+                    image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
+                    
                     
                 
             else:
-                success, image = cap.read()
-                image = undistorter.undistortOPT(image)                
+                success, image = cap1.read()
+                image = undistorter.undistortOPT(image)
+                image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
+                
                 
                 
                 
@@ -540,7 +584,6 @@ def skeletonizer(KP_global, EX_global, q):
             
 
 
-
             if sti is None:
                 print("image null")
                 break
@@ -552,8 +595,6 @@ def skeletonizer(KP_global, EX_global, q):
             
             # render in front of ex_string
             if ex_string != "":
-
-
                 #sti = np.concatenate((image,image1[550:720, 0:480]), axis= 0)
 
                 #sti = cv2.cvtColor(sti, cv2.COLOR_BGR2RGB)
@@ -584,9 +625,12 @@ def skeletonizer(KP_global, EX_global, q):
                 # converting LM to KP
                 if results.pose_landmarks is not None:
                     # svuoto queue
+                    writeCSVdata(ID,results.pose_landmarks)
                     while not q.empty():
                         bit = q.get()
+                   
                     kp = landmarks2KP(results.pose_landmarks, sti)
+                    
                     if q.full():
                         print("impossible to insert data in full queue")
                     else:
@@ -612,5 +656,6 @@ def skeletonizer(KP_global, EX_global, q):
 
         cap.release()
         s.close()
+       
 
         cv2.destroyAllWindows()

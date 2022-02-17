@@ -253,7 +253,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
 
                     print("COUNTING routine :  {} ".format(count))
 
-                return count, stage
+                return count, stage, per
                 # distance
 
 
