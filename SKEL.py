@@ -422,7 +422,6 @@ def skeletonizer(KP_global, EX_global, q):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 5000
-
     fs = sender.FrameSegment(s, port)
     #stitcher serve per fondere due immagini da due camere
     print("try creating undistorter...")
@@ -440,6 +439,7 @@ def skeletonizer(KP_global, EX_global, q):
 
         frame_width1 = int(cap1.get(3))
         frame_height1 = int(cap1.get(4))
+
     elif len(camera_index) == 1:
         print("1 camera system")
         cap = cv2.VideoCapture(camera_index[0])
@@ -452,6 +452,8 @@ def skeletonizer(KP_global, EX_global, q):
     else:
         print("not enough camera aviable: camera numer = ",len(camera_index))
         return 0
+    out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_height1,frame_width1))
+
 
     #cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER)
 
@@ -493,22 +495,22 @@ def skeletonizer(KP_global, EX_global, q):
             #print("read image succes")
             if len(camera_index) == 2:
                 if ID >= 50 and ID <= 60 :
-                    success, image = cap.read()
+                    success, image = cap1.read()
                     image = undistorter.undistortOPT180(image)
                     image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
+                    image = cv2.rotate(image,cv2.ROTATE_180)
                     
                    
                 else:
-                    success, image = cap1.read()
+                    success, image = cap.read()
                     
                     #image=undistort(image)
                     image = undistorter.undistortOPT(image)
                     image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
-                    
-                    
-                
+                    #image = cv2.rotate(image,cv2.ROTATE_180)
+
             else:
-                success, image = cap1.read()
+                success, image = cap.read()
                 image = undistorter.undistortOPT(image)
                 image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
                 
@@ -581,6 +583,8 @@ def skeletonizer(KP_global, EX_global, q):
             #sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
     
             sti = cv2.flip(sti, 1)
+            out.write(sti)
+
             
 
 
@@ -650,11 +654,14 @@ def skeletonizer(KP_global, EX_global, q):
             #print("udp completed img")
             
 
-            cv2.imshow('MediaPipe Pose', sti)
+            #cv2.imshow('MediaPipe Pose', sti)
             if cv2.waitKey(5) & 0xFF == 27:
                 return False
 
         cap.release()
+        cap1.release()
+
+        out.release()
         s.close()
        
 

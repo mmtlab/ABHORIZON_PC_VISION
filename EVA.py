@@ -320,6 +320,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
         ex_string_from_TCP = TCP_listen_check_4_string(string_from_tcp_ID,ex_string_from_TCP)
         #print("TCP ex ID : ", string_from_tcp_ID.value)
 
+        #time.sleep(0.05)
         if ex_string_from_TCP == "":
 
             ex_string_from_TCP = no_ex_cycle_control(string_from_tcp_ID,ex_string_from_TCP)
