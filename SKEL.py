@@ -11,12 +11,27 @@ import socket
 import imutils
 import csv
 from datetime import datetime
+from numpy.linalg import norm
 
+
+
+
+def brightness(img):
+    #funzione per il calcolo della luminosità dell immagine
+
+    if len(img.shape) == 3:
+         # Colored RGB or BGR (*Do Not* use HSV images with this function)
+        # create brightness with euclidean norm
+        return np.average(norm(img, axis=2)) / np.sqrt(3)
+    else:
+        # Grayscale
+        return np.average(img)
 
 
 
 def ex_string_to_ID(ex_string):
-    # read from ex_info
+    #converte una stringa esercizio nel suo ID caratteristico
+    # read from ex_info 
     config = configparser.ConfigParser()
     config.read('exercise_info.ini')
     sections = config.sections()
@@ -36,6 +51,7 @@ def ex_string_to_ID(ex_string):
 
 
 def writeCSVdata(ID,landmarks):
+    #scrive su un file csv i dati estratti dalla rete Neurale
     file = open('./data/subject_n_ex_m.csv', 'a')
     writer = csv.writer(file)
     now = datetime.now()
@@ -60,7 +76,7 @@ def writeCSVdata(ID,landmarks):
 
 
 
-def write_data(data):
+def write_data(data): #deprecated
     f = open('homografy.csv', 'a')
     writer = csv.writer(f)
 
@@ -68,7 +84,7 @@ def write_data(data):
 
 
 def returnCameraIndexes():
-    # checks the first 10 indexes.
+    # checks the first 10 indexes of cameras usb connected
     index = 0
     arr = []
     i = 10
@@ -87,6 +103,7 @@ def returnCameraIndexes():
     return arr
 
 class Undistorter:
+    #crea una matrice di mapping a partire dai parametri della camera per correggere le distorsioni fisheye
     def __init__(self):
         self.cachedM1 = None
         self.cachedM2 = None
@@ -315,6 +332,7 @@ def ID_to_ex_string(ID):
 
 
 def KP_to_render_from_config_file(segments):
+    #estre i keypoint di interesse a partire dal esercizio selezionato
     config_geometrical = configparser.ConfigParser()
 
     config_geometrical.read('config.ini')
@@ -334,6 +352,7 @@ def KP_to_render_from_config_file(segments):
 
 
 def ex_string_to_config_param(ex_string):
+    #a partire dalla stringa esercizio estre i parametri di valutazione come KP 
     # read from ex_info
     config_sk = configparser.ConfigParser()
     config_sk.read('exercise_info.ini')
@@ -355,6 +374,7 @@ def ex_string_to_config_param(ex_string):
 
 
 def KP_renderer_on_frame(ex_string, kp, img):
+    #grafica i KP coinvolti nell esercizio sull immagine
 
     if not ex_string:
         print("no exercise // no rendering")
@@ -374,13 +394,14 @@ def KP_renderer_on_frame(ex_string, kp, img):
                 y.append(kp[segment[i + 1]])
 
             for i in range(int(len(segment)/2) - 1 ):
-                cv2.line(img, (x[i], y[i]), (x[i + 1], y[i + 1]), (255, 255, 255), 3)
+                cv2.line(img, (x[i], y[i]), (x[i + 1], y[i + 1]), (255, 100, 255), 4)
 
-            for i in range(len(x)):
-                cv2.circle(img, (x[i], y[i]), 10, (0, 0, 255), cv2.FILLED)
-                cv2.circle(img, (x[i], y[i]), 15, (0, 0, 255), 2)
+            #for i in range(len(x)):
+                #cv2.circle(img, (x[i], y[i]), 1, (0, 0, 255), cv2.FILLED)
+                #cv2.circle(img, (x[i], y[i]), 3, (0, 0, 255), 2)
 
 def read_shared_mem_for_ex_string(mem_ex_value):
+    #controlla la memoria condivisa e estrae l esercizio salvato
     if mem_ex_value == 0:
         ex_string = ""
         return ex_string
@@ -404,6 +425,7 @@ def landmarks2keypoints(landmarks, image): # deprecated
 
 
 def landmarks2KP(landmarks, image):
+    #converte i landmark prodotti da mediapipe in un array di coord x y
     image_width, image_height = image.shape[1], image.shape[0]
     keypoints = []
     for index, landmark in enumerate(landmarks.landmark):
@@ -416,6 +438,7 @@ def landmarks2KP(landmarks, image):
 
 
 def skeletonizer(KP_global, EX_global, q):
+    #corpo del codice con ini camere e rete neurale
     # printing process id
     print("ID of process running worker1: {}".format(os.getpid()))
     
@@ -452,7 +475,7 @@ def skeletonizer(KP_global, EX_global, q):
     else:
         print("not enough camera aviable: camera numer = ",len(camera_index))
         return 0
-    out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_height1,frame_width1))
+    #out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_height1,frame_width1))
 
 
     #cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER)
@@ -468,11 +491,11 @@ def skeletonizer(KP_global, EX_global, q):
     mp_pose = mp.solutions.pose
     print("start pose config")
     with mp_pose.Pose(
-            static_image_mode=False,  # false for prediction
-            upper_body_only=False,
-            smooth_landmarks=True,
-            min_detection_confidence=0.8,
-            min_tracking_confidence=0.8) as pose:
+        static_image_mode=False, #false for prediction
+        model_complexity=1,
+        smooth_landmarks=True,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.6) as pose:
         print("start loop")
         
         if len(camera_index) == 2:
@@ -514,7 +537,7 @@ def skeletonizer(KP_global, EX_global, q):
                 image = undistorter.undistortOPT(image)
                 image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
                 
-                
+            #image = image[180:frame_width1, 70:frame_height1-70]
                 
                 
                 
@@ -581,9 +604,18 @@ def skeletonizer(KP_global, EX_global, q):
                 #sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
                 
             #sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
+            alpha = 4
+            beta = 12
+            #sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
+            if brightness(sti) < 80:
+                #print(brightness(sti))
+                sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
+
+                
     
             sti = cv2.flip(sti, 1)
-            out.write(sti)
+            #out.write(sti)
+            
 
             
 
@@ -598,7 +630,9 @@ def skeletonizer(KP_global, EX_global, q):
 
             
             # render in front of ex_string
+            
             if ex_string != "":
+                #print("checker : EX:<{}> ".format(ex_string))
                 #sti = np.concatenate((image,image1[550:720, 0:480]), axis= 0)
 
                 #sti = cv2.cvtColor(sti, cv2.COLOR_BGR2RGB)
@@ -607,8 +641,9 @@ def skeletonizer(KP_global, EX_global, q):
                 # To improve performance, optionally mark the image as not writeable to
                 # pass by reference.
                 sti.flags.writeable = False
-                #print("preproc")
+                #
                 results = pose.process(sti)
+                #print("p", results.pose_landmarks)
 
 
 
@@ -619,21 +654,26 @@ def skeletonizer(KP_global, EX_global, q):
                 end = time.time()
                 seconds = end - start
                 fps = 1 / seconds
-                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (frame_width2-300, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
+                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (200, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
                 # Render detections
+                
+                '''
                 mp_drawing.draw_landmarks(sti, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
                                           mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
                                           mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                                           )
-
+                '''
                 # converting LM to KP
                 if results.pose_landmarks is not None:
                     # svuoto queue
-                    writeCSVdata(ID,results.pose_landmarks)
+                    #scrivo su csv
+                    #writeCSVdata(ID,results.pose_landmarks)
+                    #print("rendering...")
                     while not q.empty():
                         bit = q.get()
                    
                     kp = landmarks2KP(results.pose_landmarks, sti)
+                    #print("kp : ",kp)
                     
                     if q.full():
                         print("impossible to insert data in full queue")
@@ -645,6 +685,8 @@ def skeletonizer(KP_global, EX_global, q):
 
                     # print("KP global found : {}".format(len(KP_global)))
                     KP_renderer_on_frame(ex_string, kp, sti)
+                else:
+                    print("results is none: ", results.pose_landmarks)
 
 
 
@@ -661,7 +703,7 @@ def skeletonizer(KP_global, EX_global, q):
         cap.release()
         cap1.release()
 
-        out.release()
+        #out.release()
         s.close()
        
 

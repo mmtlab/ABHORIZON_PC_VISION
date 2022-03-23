@@ -13,12 +13,14 @@ import queue
 import csv
 
 def write_data_csv(data):
+    #write data 2 CSV
     f = open('data.csv', 'a')
     writer = csv.writer(f)
         
     writer.writerow(data)
 
 def joint_distance_calculator(kps_to_render,kp):
+    #calculate distance btw 2 2d point (from all KP select only the segment 2 render)
     distance = []
     normalizer = math.sqrt(pow((kp[22]-kp[24]),2) + pow((kp[23]-kp[25]),2)) #spalle
 
@@ -37,6 +39,7 @@ def joint_distance_calculator(kps_to_render,kp):
 
 
 def no_ex_cycle_control(string_from_tcp_ID,ex_string):
+    #loop to wait command from coordinator
     while ex_string == "":
         ex_string = TCP_listen_check_4_string(string_from_tcp_ID, ex_string)
         # print("listen to port for command...")
@@ -44,7 +47,7 @@ def no_ex_cycle_control(string_from_tcp_ID,ex_string):
 
 
 def ex_string_to_ID(ex_string):
-    # read from ex_info
+    # read from ex_info string and convert to integer ID of exercise
     config = configparser.ConfigParser()
     config.read('exercise_info.ini')
     sections = config.sections()
@@ -84,6 +87,7 @@ def ID_to_ex_string(ID):
 
 
 def KP_to_render_from_config_file(dictionary):
+    #extract the Kps of the exercise fron the ini file 
     config_geometrical = configparser.ConfigParser()
 
     config_geometrical.read('config.ini')
@@ -104,6 +108,7 @@ def KP_to_render_from_config_file(dictionary):
 
 
 def ex_string_to_config_param(ex_string):
+    #take all info of the exercise from the config files, write on a dictionary
     # read from ex_info
     config = configparser.ConfigParser()
     config.read('exercise_info.ini')
@@ -138,6 +143,7 @@ def ex_string_to_config_param(ex_string):
 
 
 def wait_for_keypoints(queuekp):
+    #loop 4 waiting the queue of KP from mediapipe
     keypoints = []
 
     while not keypoints:
@@ -157,6 +163,7 @@ def wait_for_keypoints(queuekp):
 
 
 def check_for_string_in_memory(multiprocessing_value_slot):
+    #return the exercise written in the shared memory (if prresent)
     ex_ID = multiprocessing_value_slot
     ex_string_selected = ID_to_ex_string(ex_ID)
 
@@ -164,7 +171,7 @@ def check_for_string_in_memory(multiprocessing_value_slot):
 
 
 def TCP_listen_check_4_string(string_from_tcp_ID,ex_string_recived):
-
+    #convert the shared memory id to a string identifing the exercise 
     if string_from_tcp_ID.value == 0:
         ex_string_recived = "stop"
         return ex_string_recived
@@ -181,7 +188,7 @@ def TCP_listen_check_4_string(string_from_tcp_ID,ex_string_recived):
 
 
 def write_ex_string_in_shared_memory(ex_string_recived):
-    # qui associo alla stringa ricevuta l'ID dell esertcizio
+    # qui associo alla stringa ricevuta l'ID dell esertcizio e salvo in shared memory
 
     multiprocessing_value_slot = ex_string_to_ID(ex_string_recived)
 
@@ -189,8 +196,7 @@ def write_ex_string_in_shared_memory(ex_string_recived):
 
 
 def findAngle(p1, p2, p3):
-    # ci vuole una routine che controlli geometricamente e
-    # a livello di tipo che i valori di kp siano reali
+    # da 3 punti 2d ricavo l angolo interno
     # Get the landmarks
     (x1, y1) = p1
     (x2, y2) = p2
@@ -211,6 +217,9 @@ def findAngle(p1, p2, p3):
 
 
 def kp_geometry_analisys(kp, count, stage, per, dictionary):
+    #funzione per il conteggio esercizi
+    #confronta le posizioni dei giunti con le soglie stabilite dai file di configurazione
+    #differenzia tra confronto di angoli e di distanze
     if kp == []:
         print("no KP aviable")
     else:
@@ -226,6 +235,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
         if len(kps_to_render) != 0:
                 # print("dictionary: {}".format(dictionary))
             if len(kps_to_render[0]) == 4:
+                #distanza
 
                 distance = joint_distance_calculator(kps_to_render,kp)
                 print("distance is :", distance)
@@ -261,6 +271,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
 
 
             elif len(kps_to_render[0]) == 6:
+                #confronto angolare
                 print("angle")
 
             # angle:
@@ -276,7 +287,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
                     
                     angle.append(a)
                     # print("angle from EVA : {}".format(angle))
-                    p = np.interp(a, (10, 160), (100, 0))
+                    p = np.interp(a, (eva_range[0], eva_range[1]), (100, 0))
                     per.append(p)
                     # Check for the dumbbell curls
                     # print("eva range 1 : {}".format(eva_range[1]))
@@ -301,6 +312,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
 
 
 def evaluator(EX_global, q,string_from_tcp_ID):
+    #funzione main per l evaluator, gestisce le sub funzioni e lavora come una macchina a stati
     # printing process id
     print("ID of process running evaluator: {}".format(os.getpid()))
 
@@ -317,6 +329,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
     while True:
 
         #time.sleep(0.5)
+        #verifico l arrivo di comandi da coordinator
         ex_string_from_TCP = TCP_listen_check_4_string(string_from_tcp_ID,ex_string_from_TCP)
         #print("TCP ex ID : ", string_from_tcp_ID.value)
 
@@ -346,6 +359,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
 
         elif ex_string_from_TCP == "start":
             if EX_global.value != 0:
+                #______ASSEGNO LA ex_string per l inizio della valutazione
                 ex_string = check_for_string_in_memory(EX_global.value)
                 #print("an exercise is under evaluation, starting...", ex_string)
                 #print("count = {}".format(count))
@@ -357,6 +371,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
                 ex_string_from_TCP = no_ex_cycle_control(string_from_tcp_ID,ex_string_from_TCP)  # da togliere
 
         else:
+            #arrivato un nuovo esercizio non ancora scritto
 
             EX_global.value = write_ex_string_in_shared_memory(ex_string_from_TCP)
             #print("{} string wrote in memory".format(ex_string_from_TCP))
