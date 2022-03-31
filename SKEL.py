@@ -12,9 +12,13 @@ import imutils
 import csv
 from datetime import datetime
 from numpy.linalg import norm
+import statistics
 
-
-
+camera_index_secondary = 1
+camera_index_primary = 0
+recording = True
+#camera_index_secondary = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_h_ex_1b.avi"
+    
 
 def brightness(img):
     #funzione per il calcolo della luminosità dell immagine
@@ -381,6 +385,7 @@ def KP_renderer_on_frame(ex_string, kp, img):
     else:
 
         kp_2_rend = ex_string_to_config_param(ex_string)
+        #print("kp2ren:", kp_2_rend)
 
         #print("kp_2_rend : ", kp_2_rend)
 
@@ -394,8 +399,8 @@ def KP_renderer_on_frame(ex_string, kp, img):
                 y.append(kp[segment[i + 1]])
 
             for i in range(int(len(segment)/2) - 1 ):
-                cv2.line(img, (x[i], y[i]), (x[i + 1], y[i + 1]), (255, 100, 255), 4)
-
+                cv2.line(img, (x[i], y[i]), (x[i + 1], y[i + 1]), (55, 100, 255), 4)
+            cv2.circle(img, (kp[0], kp[1]), 3, (0, 0, 255), cv2.FILLED)
             #for i in range(len(x)):
                 #cv2.circle(img, (x[i], y[i]), 1, (0, 0, 255), cv2.FILLED)
                 #cv2.circle(img, (x[i], y[i]), 3, (0, 0, 255), 2)
@@ -423,18 +428,74 @@ def landmarks2keypoints(landmarks, image): # deprecated
 
     return keypoints
 
-
+'''
 def landmarks2KP(landmarks, image):
     #converte i landmark prodotti da mediapipe in un array di coord x y
     image_width, image_height = image.shape[1], image.shape[0]
     keypoints = []
+  
+    keypoints_simply = []
+   
+    for index, landmark in enumerate(landmarks.landmark):
+        
+            
+        landmark_x = min(int(landmark.x * image_width), image_width - 1)
+        landmark_y = min(int(landmark.y * image_height), image_height - 1)
+        landmark_z = landmark.z
+        keypoints.append[landmark_x,landmark_y]
+        
+    np.median(keypoints[0:10], axis = 0)
+    np.median([keypoints[15],keypoints[17],keypoints[19],keypoints[21]], axis = 0)
+    np.median([keypoints[16],keypoints[18],keypoints[20],keypoints[22]], axis = 0)
+    np.median([keypoints[27],keypoints[29],keypoints[31]], axis = 0)
+    np.median([keypoints[28],keypoints[30],keypoints[32]], axis = 0)      
+            
+            
+    return keypoints
+'''
+
+def landmarks2KP(landmarks, image):
+    image_width, image_height = image.shape[1], image.shape[0]
+    keypoints = []
+    keypoints_simply = []
     for index, landmark in enumerate(landmarks.landmark):
         landmark_x = min(int(landmark.x * image_width), image_width - 1)
         landmark_y = min(int(landmark.y * image_height), image_height - 1)
         landmark_z = landmark.z
-        keypoints.append(landmark_x)
-        keypoints.append(landmark_y)
-    return keypoints
+        keypoints.append([landmark_x, landmark_y])
+
+    keypoints_simply.append(np.median(keypoints[0:10], axis=0).astype(int))
+    keypoints_simply.append(keypoints[11])
+    keypoints_simply.append(keypoints[12])
+    keypoints_simply.append(keypoints[13])
+    keypoints_simply.append(keypoints[14])
+
+    keypoints_simply.append(np.median([keypoints[15], keypoints[17], keypoints[19], keypoints[21]], axis=0).astype(int))
+    keypoints_simply.append(np.median([keypoints[16], keypoints[18], keypoints[20], keypoints[22]], axis=0).astype(int))
+    keypoints_simply.append(keypoints[23])
+    keypoints_simply.append(keypoints[24])
+    keypoints_simply.append(keypoints[25])
+    keypoints_simply.append(keypoints[26])
+    keypoints_simply.append(np.median([keypoints[27], keypoints[29], keypoints[31]], axis=0).astype(int))
+    keypoints_simply.append(np.median([keypoints[28], keypoints[30], keypoints[32]], axis=0).astype(int))
+
+    #print("kp instance 2.0:", len(keypoints_simply))
+
+    #cv2.circle(image, (keypoints_simply[1]),5,(255, 100, 255),3)
+    #cv2.circle(image, (keypoints_simply[2]), 5, (255, 100, 255), 3)
+    #cv2.circle(image, (keypoints_simply[3]), 5, (255, 100, 255), 3)
+    #cv2.circle(image, (keypoints_simply[4]), 5, (255, 100, 255), 3)
+
+    kpp = []
+
+    for u in range(len(keypoints_simply)):
+        kpp.append(keypoints_simply[u][0])
+        kpp.append(keypoints_simply[u][1])
+
+
+    #print("kpppp:", len(kpp))
+    return kpp
+
 
 
 def skeletonizer(KP_global, EX_global, q):
@@ -454,8 +515,14 @@ def skeletonizer(KP_global, EX_global, q):
     if len(camera_index) == 2:
         print("2 camera system")
     
-        cap = cv2.VideoCapture(camera_index[0])
-        cap1 = cv2.VideoCapture(camera_index[1])
+
+
+        cap = cv2.VideoCapture(camera_index[camera_index_primary])
+        cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+        #path = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_z_ex_1.avi"
+        #cap1 = cv2.VideoCapture(path)
+        
+        
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
         print(frame_width2,frame_height2)
@@ -475,7 +542,7 @@ def skeletonizer(KP_global, EX_global, q):
     else:
         print("not enough camera aviable: camera numer = ",len(camera_index))
         return 0
-    #out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_height1,frame_width1))
+    out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_height1,frame_width1))
 
 
     #cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER)
@@ -518,7 +585,7 @@ def skeletonizer(KP_global, EX_global, q):
             #print("read image succes")
             if len(camera_index) == 2:
                 if ID >= 50 and ID <= 60 :
-                    success, image = cap1.read()
+                    success, image = cap1.read()#togli cancelletti 
                     image = undistorter.undistortOPT180(image)
                     image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
                     image = cv2.rotate(image,cv2.ROTATE_180)
@@ -606,15 +673,15 @@ def skeletonizer(KP_global, EX_global, q):
             #sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
             alpha = 4
             beta = 12
-            #sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
-            if brightness(sti) < 80:
+            #sti = cv2.convertScaleAbs(sti, alpha=1, beta=3)
+            #if brightness(sti) < 80:
                 #print(brightness(sti))
-                sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
+                #sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
 
                 
     
             sti = cv2.flip(sti, 1)
-            #out.write(sti)
+            
             
 
             
@@ -640,6 +707,8 @@ def skeletonizer(KP_global, EX_global, q):
 
                 # To improve performance, optionally mark the image as not writeable to
                 # pass by reference.
+                if recording == True:
+                    out.write(sti)
                 sti.flags.writeable = False
                 #
                 results = pose.process(sti)
@@ -667,7 +736,7 @@ def skeletonizer(KP_global, EX_global, q):
                 if results.pose_landmarks is not None:
                     # svuoto queue
                     #scrivo su csv
-                    #writeCSVdata(ID,results.pose_landmarks)
+                    writeCSVdata(ID,results.pose_landmarks)
                     #print("rendering...")
                     while not q.empty():
                         bit = q.get()
@@ -703,7 +772,7 @@ def skeletonizer(KP_global, EX_global, q):
         cap.release()
         cap1.release()
 
-        #out.release()
+        out.release()
         s.close()
        
 

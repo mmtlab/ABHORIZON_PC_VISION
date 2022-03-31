@@ -12,6 +12,8 @@ import statistics
 import queue
 import csv
 
+
+
 def write_data_csv(data):
     #write data 2 CSV
     f = open('data.csv', 'a')
@@ -22,7 +24,7 @@ def write_data_csv(data):
 def joint_distance_calculator(kps_to_render,kp):
     #calculate distance btw 2 2d point (from all KP select only the segment 2 render)
     distance = []
-    normalizer = math.sqrt(pow((kp[22]-kp[24]),2) + pow((kp[23]-kp[25]),2)) #spalle
+    normalizer = math.sqrt(pow((kp[2]-kp[4]),2) + pow((kp[3]-kp[5]),2)) #spalle
 
     for i in range(len(kps_to_render)):
         # print("number of arms: {}".format(len(kps_to_render)))
@@ -125,13 +127,19 @@ def ex_string_to_config_param(ex_string):
             segments = segments.split(',')
             eva_range = config.get(exercise, 'evaluation_range')
             eva_range = [int(x) for x in eva_range.split(",")]
+            joints_target = config.get(exercise, 'joints_target')
+            joints_target = [int(x) for x in joints_target.split(",")]
+            
+            #print("joints and target : ", joints_target)
 
             dictionary = {
                 "segments": segments,
                 "eva_range": eva_range,
-                "KPS_to_render": []
+                "KPS_to_render": [],
+                "joints_target" : joints_target
+                
             }
-            # print("dictionary : {}".format(dictionary))
+            #print("dictionary : {}".format(dictionary))
 
             dictionary = KP_to_render_from_config_file(dictionary)
 
@@ -214,6 +222,83 @@ def findAngle(p1, p2, p3):
 
     return angle
 
+def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+    phase = [0,0]
+    
+    w = 0.5
+    threshold = 2000
+    printV = False
+    if printV == True:
+        print("kp_history:", kp_history)
+        print("eval_data:", eval_data)
+        print("count:", count)
+        print("dictionary:", dictionary)
+        print("dictionary:__ LENGHT", len(dictionary["joints_target"]))
+    if len(kp_history) > 9:
+
+        side = int(len(dictionary["joints_target"])/4) #0-1
+        old_value = []
+
+        for hand in range(side):
+            IDx_m = dictionary["joints_target"][4*hand]
+            IDy_m = dictionary["joints_target"][4*hand+1]
+
+            xa = kp_history[-1][IDx_m]
+            xt = ((dictionary["joints_target"][4*hand +2] )/100 )*480
+            ya = kp_history[-1][IDy_m]
+            yt = ((dictionary["joints_target"][4*hand +3] )/100 )*640
+            #D_sx = math.sqrt(pow((xa - xt), 2) + pow((ya - yt), 2))
+            D_time = []
+
+            for i in range(len(kp_history)):
+                XM_i = kp_history[i][IDx_m]
+                YM_i = kp_history[i][IDy_m]
+                D_i = pow((XM_i - xt), 2) + pow((YM_i - yt), 2)
+                D_time.append(D_i)
+            D_m = np.median(D_time)
+            D_p_m = eval_data[hand]
+            
+            V_p = eval_data[hand +2]
+            #calcolo V istantanea guardando la media dei valori precedenti e la velocità del frame precedente
+            Vx = V_p * w + (D_m - D_p_m) * (1 - w)
+            #trascrivo i valori di Dmedia e Vi sui dati di valutazione per la prox iterazione
+            eval_data[hand] = D_m
+            eval_data[hand+2] = Vx
+           
+            old_value.append(V_p)
+            #print("CHNNNDNT:",  hand)
+
+            if Vx <= -threshold:
+                phase[hand] = 1
+                stage[hand] = "load"
+            elif Vx < threshold and Vx > -threshold:
+                #stage[hand] = "pause"
+                phase[hand] = 0
+            elif Vx >= threshold:
+                phase[hand] = -1
+                if stage[hand] == "load":
+                    count[hand] +=1
+                    stage[hand]= "release"
+                    print("COUNTED!!! : ",hand,-threshold, stage[hand], eval_data[2], eval_data[3])
+                    print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
+
+        #print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
+        
+
+    else:
+        print("need story data to tune evaluator")
+
+    return eval_data, count, phase
+    
+    
+
 
 
 def kp_geometry_analisys(kp, count, stage, per, dictionary):
@@ -238,8 +323,8 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
                 #distanza
 
                 distance = joint_distance_calculator(kps_to_render,kp)
-                print("distance is :", distance)
-                print("eva range", eva_range)
+                #print("distance is :", distance)
+                #print("eva range", eva_range)
 
                 for val in range(len(distance)):
 
@@ -251,7 +336,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
                     # print("eva range 1 : {}".format(eva_range[1]))
                     # print(a)
                     # print("stage control: {}".format(stage))
-                    print("dist_eva: ", distance[val], (eva_range[1])/100)
+                    #print("dist_eva: ", distance[val], (eva_range[1])/100)
 
                     if distance[val] > (eva_range[1])/100:
 
@@ -261,7 +346,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
                         stage[val] = "up"
                         count[val] += 1
 
-                    print("COUNTING routine :  {} ".format(count))
+                    #print("COUNTING routine :  {} ".format(count))
 
                 return count, stage, per
                 # distance
@@ -272,7 +357,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
 
             elif len(kps_to_render[0]) == 6:
                 #confronto angolare
-                print("angle")
+                #print("KPS to render:", kps_to_render)
 
             # angle:
 
@@ -301,7 +386,7 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
                         stage[i] = "up"
                         count[i] += 1
 
-                    print("COUNTING routine :  {} ".format(count))
+                    #print("COUNTING routine :  {} ".format(count))
                     # print("percentage : {} %".format(per))
                 # print("angle : {}".format(angle))
                 # print("stage : {}".format(stage))
@@ -318,6 +403,9 @@ def evaluator(EX_global, q,string_from_tcp_ID):
 
     #time.sleep(3)
     kp = []
+    kp_story = []
+    eval_data = [0,0,0,0]
+    stage_v2 = [0,0]
 
     stage = ["", ""]
     per = [0,0]
@@ -344,7 +432,9 @@ def evaluator(EX_global, q,string_from_tcp_ID):
             # refreshing parameter of exercise
             ex_string_from_TCP = ""
             count = [0, 0]
+            count_v2 =  [0, 0]
             stage = ["", ""]
+            stage_v2 = ["", ""]
             EX_global.value = 0
             ex_string = ""
             #print("count = {}".format(count))
@@ -382,15 +472,32 @@ def evaluator(EX_global, q,string_from_tcp_ID):
                 # controllo di aver letto con successo la memoria dopo il comando di start
 
                 #print("read from memory: {}".format(ex_string))
-
-                kp = wait_for_keypoints(q)
-
                 config_param_dictionary = ex_string_to_config_param(ex_string)
 
-                count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
-                #print("count. ",count)
 
-                packet = str(max(count)) + "," + str(int(max(per)))   
-                print("packet", packet)             
+                kp = wait_for_keypoints(q)
+                kp_story.append(kp)
+                while (len(kp_story) > 10):
+                    kp_story.pop(0)
+                #print("len kp:",len(kp_story))
+
+                eval_data,count_v2,stage_v2 = kp_geometry_analisys_v2(eval_data, kp_story, count_v2, config_param_dictionary,stage_v2)
+
+
+                #count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
+                #print("count. ",count)
+                if stage_v2[0] == 0 or stage_v2[1] == 0:
+                    stg = 0
+                else:
+                    stg = np.median(stage_v2)
+                    
+                
+
+                ##packet = str(max(count)) + "," + str(int(max(per)))
+                #packet = str(max(count_v2)) + "," + str(int(stg))
+                packet = [max(count_v2),stg]
+                #print("packet", packet)
+                #print("stg is : ", stg)
                 
                 sender.send_status(21011, packet,'127.0.0.1')
+                

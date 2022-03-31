@@ -59,8 +59,10 @@ def send_status(port, status, ip='127.0.0.1'):
         host = socket.gethostname()  # Get the local machine name
         # print("i am : {}".format(host))
         s.connect((ip, port))
-        s.send(status.encode())
-        print("sended : {}".format(status))
+        #print(status)
+        s.send((str(status)+'\n').encode())
+        s.pack(f'{len(status)}d',*status)
+        #print("sended : {}".format(status))
         # data = s.recv(BUFFER_SIZE)
         s.close()
         #print("s closd _||")
