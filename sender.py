@@ -51,7 +51,7 @@ class FrameSegment(object):
             num_of_segments -= 1
 
 
-def send_status(port, status, ip='localhost'):
+def send_status(port, status1,status2, ip='localhost'):
     #if __name__ == "__main__":
         BUFFER_SIZE = 1024
 
@@ -61,6 +61,7 @@ def send_status(port, status, ip='localhost'):
         s.connect((ip, port))
         #print(status)
         #s.send((str(status)+'\n').encode())
+        status =[float(status1),float(status2)]
         s.send(struct.pack(f'{len(status)}d',*status))
         #print("sended : {}".format(status))
         # data = s.recv(BUFFER_SIZE)

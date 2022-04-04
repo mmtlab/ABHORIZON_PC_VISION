@@ -601,11 +601,12 @@ def evaluator(EX_global, q,string_from_tcp_ID):
 
                 ##packet = str(max(count)) + "," + str(int(max(per)))
                 #packet = str(max(count_v2)) + "," + str(int(stg))
-                packet = [float(count_v2[0]),float(stg)]
-                #packet = [1,0]
-                print("packet", packet)
+                #packet = [float(count_v2[0]),float(stg)]
+                #packet = [0,0]
+            
+                print("packet", count_v2[0],stg)
                 #print("stg is : ", stg)
                 
-                sender.send_status(21011, packet,'localhost')
+                sender.send_status(21011, count_v2[0],stg,'localhost')
               
         
