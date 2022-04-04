@@ -16,7 +16,12 @@ import statistics
 
 camera_index_secondary = 1
 camera_index_primary = 0
-recording = True
+recording = False
+writing = False
+showing = False
+printing_FPS = False
+model = 1
+
 #camera_index_secondary = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_h_ex_1b.avi"
     
 
@@ -519,6 +524,7 @@ def skeletonizer(KP_global, EX_global, q):
 
         cap = cv2.VideoCapture(camera_index[camera_index_primary])
         cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+        
         #path = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_z_ex_1.avi"
         #cap1 = cv2.VideoCapture(path)
         
@@ -559,7 +565,7 @@ def skeletonizer(KP_global, EX_global, q):
     print("start pose config")
     with mp_pose.Pose(
         static_image_mode=False, #false for prediction
-        model_complexity=1,
+        model_complexity=model,
         smooth_landmarks=True,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.6) as pose:
@@ -585,8 +591,9 @@ def skeletonizer(KP_global, EX_global, q):
             #print("read image succes")
             if len(camera_index) == 2:
                 if ID >= 50 and ID <= 60 :
-                    success, image = cap1.read()#togli cancelletti 
-                    image = undistorter.undistortOPT180(image)
+                    success, image = cap1.read()#togli cancelletti
+                    if ID < 55:
+                        image = undistorter.undistortOPT180(image)
                     image = cv2.rotate(image,cv2.ROTATE_90_CLOCKWISE)
                     image = cv2.rotate(image,cv2.ROTATE_180)
                     
@@ -673,7 +680,7 @@ def skeletonizer(KP_global, EX_global, q):
             #sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
             alpha = 4
             beta = 12
-            #sti = cv2.convertScaleAbs(sti, alpha=1, beta=3)
+            #sti = cv2.convertScaleAbs(sti, alpha=5, beta=2)
             #if brightness(sti) < 80:
                 #print(brightness(sti))
                 #sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
@@ -710,9 +717,19 @@ def skeletonizer(KP_global, EX_global, q):
                 if recording == True:
                     out.write(sti)
                 sti.flags.writeable = False
+                #end1 = time.time()
+                #seconds1 = end1 - start
                 #
+                
+                #start2 = time.time()
                 results = pose.process(sti)
+                #end2 = time.time()
+                #seconds2 = end2 - start2
                 #print("p", results.pose_landmarks)
+                
+                #start3 = time.time()
+                
+                
 
 
 
@@ -720,10 +737,7 @@ def skeletonizer(KP_global, EX_global, q):
                 # Draw the pose annotation on the image.
                 sti.flags.writeable = True
                 #sti = cv2.cvtColor(sti, cv2.COLOR_RGB2BGR)
-                end = time.time()
-                seconds = end - start
-                fps = 1 / seconds
-                cv2.putText(sti, 'FPS: {}'.format(int(fps)), (200, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
+                
                 # Render detections
                 
                 '''
@@ -736,7 +750,8 @@ def skeletonizer(KP_global, EX_global, q):
                 if results.pose_landmarks is not None:
                     # svuoto queue
                     #scrivo su csv
-                    writeCSVdata(ID,results.pose_landmarks)
+                    if writing == True:
+                        writeCSVdata(ID,results.pose_landmarks)
                     #print("rendering...")
                     while not q.empty():
                         bit = q.get()
@@ -761,14 +776,21 @@ def skeletonizer(KP_global, EX_global, q):
 
             # invio streaming
             fs.udp_frame(sti)
+            
             #sender.send_status(5002, "KP_success")
             #print("udp completed img")
             
-
-            #cv2.imshow('MediaPipe Pose', sti)
+            if showing == True:
+                cv2.imshow('MediaPipe Pose', sti)
             if cv2.waitKey(5) & 0xFF == 27:
                 return False
-
+            if ex_string != "":
+                end = time.time()
+                seconds = end - start
+                fps = 1 / seconds
+                #cv2.putText(sti, 'FPS: {}'.format(int(fps)), (200, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
+                if printing_FPS == True:
+                    print("FPS:",fps, seconds)
         cap.release()
         cap1.release()
 

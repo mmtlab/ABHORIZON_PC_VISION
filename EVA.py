@@ -15,14 +15,28 @@ import csv
 
 
 def write_data_csv(data):
-    #write data 2 CSV
+    """
+    write data 2 CSV
+
+    :param data: write to a csv file input data (append to the end)
+    
+    :return: nothing
+    """
+
     f = open('data.csv', 'a')
     writer = csv.writer(f)
         
     writer.writerow(data)
 
 def joint_distance_calculator(kps_to_render,kp):
-    #calculate distance btw 2 2d point (from all KP select only the segment 2 render)
+    """
+    calculate distance btw 2 2d point (from all KP select only the segment 2 render)
+
+
+    :param kps_to_render: ID of the joints under distance evaluation 
+    :param kp: actual frame joints detected with their coordinates
+    :return: distance between the couple of joints
+    """
     distance = []
     normalizer = math.sqrt(pow((kp[2]-kp[4]),2) + pow((kp[3]-kp[5]),2)) #spalle
 
@@ -41,7 +55,13 @@ def joint_distance_calculator(kps_to_render,kp):
 
 
 def no_ex_cycle_control(string_from_tcp_ID,ex_string):
-    #loop to wait command from coordinator
+    """
+    loop to wait command from coordinator
+
+    :param string_from_tcp_ID: ID of the string coming from the listener process (ports listening)
+    :param ex_string: formal string containing the name of the exercise under eval
+    :return: ex_string
+    """
     while ex_string == "":
         ex_string = TCP_listen_check_4_string(string_from_tcp_ID, ex_string)
         # print("listen to port for command...")
@@ -49,7 +69,13 @@ def no_ex_cycle_control(string_from_tcp_ID,ex_string):
 
 
 def ex_string_to_ID(ex_string):
-    # read from ex_info string and convert to integer ID of exercise
+    """
+    read from ex_info string and convert to integer ID of exercise
+
+    :param ex_string: string of the name of the exercise
+    :param param2: none
+    :return: the ID corresponding the exercise string
+    """
     config = configparser.ConfigParser()
     config.read('exercise_info.ini')
     sections = config.sections()
@@ -69,7 +95,14 @@ def ex_string_to_ID(ex_string):
 
 
 def ID_to_ex_string(ID):
-    # read from ex_info
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+# read from ex_info
     config = configparser.ConfigParser()
     config.read('exercise_info.ini')
     sections = config.sections()
@@ -89,7 +122,14 @@ def ID_to_ex_string(ID):
 
 
 def KP_to_render_from_config_file(dictionary):
-    #extract the Kps of the exercise fron the ini file 
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+#extract the Kps of the exercise fron the ini file 
     config_geometrical = configparser.ConfigParser()
 
     config_geometrical.read('config.ini')
@@ -110,7 +150,14 @@ def KP_to_render_from_config_file(dictionary):
 
 
 def ex_string_to_config_param(ex_string):
-    #take all info of the exercise from the config files, write on a dictionary
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+#take all info of the exercise from the config files, write on a dictionary
     # read from ex_info
     config = configparser.ConfigParser()
     config.read('exercise_info.ini')
@@ -151,7 +198,14 @@ def ex_string_to_config_param(ex_string):
 
 
 def wait_for_keypoints(queuekp):
-    #loop 4 waiting the queue of KP from mediapipe
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+#loop 4 waiting the queue of KP from mediapipe
     keypoints = []
 
     while not keypoints:
@@ -171,7 +225,14 @@ def wait_for_keypoints(queuekp):
 
 
 def check_for_string_in_memory(multiprocessing_value_slot):
-    #return the exercise written in the shared memory (if prresent)
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+#return the exercise written in the shared memory (if prresent)
     ex_ID = multiprocessing_value_slot
     ex_string_selected = ID_to_ex_string(ex_ID)
 
@@ -179,7 +240,14 @@ def check_for_string_in_memory(multiprocessing_value_slot):
 
 
 def TCP_listen_check_4_string(string_from_tcp_ID,ex_string_recived):
-    #convert the shared memory id to a string identifing the exercise 
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+#convert the shared memory id to a string identifing the exercise 
     if string_from_tcp_ID.value == 0:
         ex_string_recived = "stop"
         return ex_string_recived
@@ -196,7 +264,14 @@ def TCP_listen_check_4_string(string_from_tcp_ID,ex_string_recived):
 
 
 def write_ex_string_in_shared_memory(ex_string_recived):
-    # qui associo alla stringa ricevuta l'ID dell esertcizio e salvo in shared memory
+    """
+    function description
+
+    :param param1: description of param1
+    :param param2: description of param2
+    :return: description of the function output
+    """
+# qui associo alla stringa ricevuta l'ID dell esertcizio e salvo in shared memory
 
     multiprocessing_value_slot = ex_string_to_ID(ex_string_recived)
 
@@ -224,16 +299,25 @@ def findAngle(p1, p2, p3):
 
 def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
     """
-    function description
+    compute distance from specific  joints of the ex and the compatible target,
+    calculate it's velocity over a moving avarege of the distances and
+    interpret the stage of th movement based on the sign of the velocity
 
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
+    :param eval_data: last distance and velocity of the joint target points
+    :param kp_history: last n (10) set of keypoint in the past
+    :param count: current count of the ex repetitions (permanent in memory)
+    :param dictionary: python dict with all info about the current exercise
+    (interprete from config files)
+    :param stage: the velocity trigger for counting 
+    :return: eval_data, count, phase the first two from memory are here fulfilled,
+    phase is the velocity descriptor for retroacting motors 
     """
     phase = [0,0]
+    to_count = [False,False]
+    
     
     w = 0.5
-    threshold = 2000
+    threshold = 2700
     printV = False
     if printV == True:
         print("kp_history:", kp_history)
@@ -243,7 +327,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
         print("dictionary:__ LENGHT", len(dictionary["joints_target"]))
     if len(kp_history) > 9:
 
-        side = int(len(dictionary["joints_target"])/4) #0-1
+        side = int(len(dictionary["joints_target"])/4) #0-1, 8 valori (4 punti)
         old_value = []
 
         for hand in range(side):
@@ -284,18 +368,30 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
             elif Vx >= threshold:
                 phase[hand] = -1
                 if stage[hand] == "load":
-                    count[hand] +=1
+                    #count[hand] +=1
+                    to_count[hand] = True
+                    
                     stage[hand]= "release"
-                    print("COUNTED!!! : ",hand,-threshold, stage[hand], eval_data[2], eval_data[3])
-                    print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
+                    #print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
 
+        if phase[0]  == phase [1]:
+            
+            if to_count[0] == True or to_count[1] == True:
+                
+                count[0] +=1
+                count[1] +=1
+                print("phase : ", count)
+                print("COUNTED!!! : " , stage , eval_data[2], eval_data[3])
+
+            
+            
         #print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
         
 
     else:
         print("need story data to tune evaluator")
 
-    return eval_data, count, phase
+    return eval_data, count, phase, stage
     
     
 
@@ -397,6 +493,15 @@ def kp_geometry_analisys(kp, count, stage, per, dictionary):
 
 
 def evaluator(EX_global, q,string_from_tcp_ID):
+    """
+    funzione main per l evaluator, gestisce le sub funzioni e lavora come una macchina a stati
+
+
+    :param EX_global: ID of the exercise saved in the multiprocessing shared memory
+    :param q: the queue shared by the process to exchange the keypoits detected, produced by the skel and consumed by the evaluator
+    :param string_from_tcp_ID: ID of the string recived from the ports communicator
+    :return: none
+    """
     #funzione main per l evaluator, gestisce le sub funzioni e lavora come una macchina a stati
     # printing process id
     print("ID of process running evaluator: {}".format(os.getpid()))
@@ -434,7 +539,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
             count = [0, 0]
             count_v2 =  [0, 0]
             stage = ["", ""]
-            stage_v2 = ["", ""]
+            stage_v2 = [0, 0]
             EX_global.value = 0
             ex_string = ""
             #print("count = {}".format(count))
@@ -475,13 +580,14 @@ def evaluator(EX_global, q,string_from_tcp_ID):
                 config_param_dictionary = ex_string_to_config_param(ex_string)
 
 
+
                 kp = wait_for_keypoints(q)
                 kp_story.append(kp)
                 while (len(kp_story) > 10):
                     kp_story.pop(0)
                 #print("len kp:",len(kp_story))
 
-                eval_data,count_v2,stage_v2 = kp_geometry_analisys_v2(eval_data, kp_story, count_v2, config_param_dictionary,stage_v2)
+                eval_data,count_v2,stage_v2, stage = kp_geometry_analisys_v2(eval_data, kp_story, count_v2, config_param_dictionary,stage)
 
 
                 #count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
@@ -495,9 +601,11 @@ def evaluator(EX_global, q,string_from_tcp_ID):
 
                 ##packet = str(max(count)) + "," + str(int(max(per)))
                 #packet = str(max(count_v2)) + "," + str(int(stg))
-                packet = [max(count_v2),stg]
-                #print("packet", packet)
+                packet = [float(count_v2[0]),float(stg)]
+                #packet = [1,0]
+                print("packet", packet)
                 #print("stg is : ", stg)
                 
-                sender.send_status(21011, packet,'127.0.0.1')
-                
+                sender.send_status(21011, packet,'localhost')
+              
+        
