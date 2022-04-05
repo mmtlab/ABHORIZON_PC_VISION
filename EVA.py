@@ -176,6 +176,9 @@ def ex_string_to_config_param(ex_string):
             eva_range = [int(x) for x in eva_range.split(",")]
             joints_target = config.get(exercise, 'joints_target')
             joints_target = [int(x) for x in joints_target.split(",")]
+            threshold = int(config.get(exercise, 'threshold'))
+            
+            
             
             #print("joints and target : ", joints_target)
 
@@ -183,7 +186,8 @@ def ex_string_to_config_param(ex_string):
                 "segments": segments,
                 "eva_range": eva_range,
                 "KPS_to_render": [],
-                "joints_target" : joints_target
+                "joints_target" : joints_target,
+                "threshold" : threshold
                 
             }
             #print("dictionary : {}".format(dictionary))
@@ -317,7 +321,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
     
     
     w = 0.5
-    threshold = 2700
+    threshold = dictionary["threshold"]
     printV = False
     if printV == True:
         print("kp_history:", kp_history)
@@ -604,9 +608,10 @@ def evaluator(EX_global, q,string_from_tcp_ID):
                 #packet = [float(count_v2[0]),float(stg)]
                 #packet = [0,0]
             
-                print("packet", count_v2[0],stg)
-                #print("stg is : ", stg)
+                #print("packet", count_v2[0],stg)
+                #print("stg is : ", stage_v2)
                 
                 sender.send_status(21011, count_v2[0],stg,'localhost')
-              
-        
+                #sender.send_status(21011, 5,0,'localhost')
+
+ 

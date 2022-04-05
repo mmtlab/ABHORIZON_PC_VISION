@@ -59,10 +59,21 @@ def send_status(port, status1,status2, ip='localhost'):
         host = socket.gethostname()  # Get the local machine name
         # print("i am : {}".format(host))
         s.connect((ip, port))
+        status =[float(status1),float(status2)]
+       
+        try:
+            tmp = struct.pack(f'{len(status)}d',*status)
+        except:
+            disp(status)
+        
+        try:
+            s.send(tmp)
+        except:
+            disp(tmp)
         #print(status)
         #s.send((str(status)+'\n').encode())
-        status =[float(status1),float(status2)]
-        s.send(struct.pack(f'{len(status)}d',*status))
+        
+        #s.send(struct.pack(f'{len(status)}d',*status))
         #print("sended : {}".format(status))
         # data = s.recv(BUFFER_SIZE)
         s.close()

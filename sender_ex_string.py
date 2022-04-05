@@ -18,7 +18,7 @@ def main():
 
     ip = '127.0.0.1'
 
-    status = ["biceps_curl ", "start ","pause ","start ", "stop ", "biceps_curl ", "start ", "pause ","start ", "stop "]
+    status = ["pulls_apart ", "start ","pause ","start ", "stop ", "pulls_apart ", "start ", "pause ","start ", "stop "]
     port = 21001
     print("sending config: IP = {}, PORT = {}. ".format(ip, port))
 
