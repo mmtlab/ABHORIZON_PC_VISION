@@ -404,8 +404,8 @@ def KP_renderer_on_frame(ex_string, kp, img):
                 y.append(kp[segment[i + 1]])
 
             for i in range(int(len(segment)/2) - 1 ):
-                cv2.line(img, (x[i], y[i]), (x[i + 1], y[i + 1]), (55, 100, 255), 4)
-            cv2.circle(img, (kp[0], kp[1]), 3, (0, 0, 255), cv2.FILLED)
+                cv2.line(img, (x[i], y[i]), (x[i + 1], y[i + 1]), (55, 100, 255), 10)
+            #cv2.circle(img, (kp[0], kp[1]), 3, (0, 0, 255), cv2.FILLED)
             #for i in range(len(x)):
                 #cv2.circle(img, (x[i], y[i]), 1, (0, 0, 255), cv2.FILLED)
                 #cv2.circle(img, (x[i], y[i]), 3, (0, 0, 255), 2)
