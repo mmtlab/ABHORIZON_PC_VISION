@@ -12,7 +12,7 @@ import statistics
 import queue
 import csv
 
-
+STORY = 5
 
 def write_data_csv(data):
     """
@@ -177,6 +177,7 @@ def ex_string_to_config_param(ex_string):
             joints_target = config.get(exercise, 'joints_target')
             joints_target = [int(x) for x in joints_target.split(",")]
             threshold = int(config.get(exercise, 'threshold'))
+            threshold_count = int(config.get(exercise, 'threshold_count'))
             
             
             
@@ -187,7 +188,8 @@ def ex_string_to_config_param(ex_string):
                 "eva_range": eva_range,
                 "KPS_to_render": [],
                 "joints_target" : joints_target,
-                "threshold" : threshold
+                "threshold" : threshold,
+                "threshold_count" : threshold_count
                 
             }
             #print("dictionary : {}".format(dictionary))
@@ -322,6 +324,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
     
     w = 0.5
     threshold = dictionary["threshold"]
+    threshold_count = dictionary["threshold_count"]
     printV = False
     if printV == True:
         print("kp_history:", kp_history)
@@ -329,7 +332,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
         print("count:", count)
         print("dictionary:", dictionary)
         print("dictionary:__ LENGHT", len(dictionary["joints_target"]))
-    if len(kp_history) > 9:
+    if len(kp_history) > STORY - 1:
 
         side = int(len(dictionary["joints_target"])/4) #0-1, 8 valori (4 punti)
         old_value = []
@@ -365,20 +368,22 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
 
             if Vx <= -threshold:
                 phase[hand] = 1
-                stage[hand] = "load"
+                if Vx <= threshold_count:
+                    stage[hand] = "load"
             elif Vx < threshold and Vx > -threshold:
                 #stage[hand] = "pause"
                 phase[hand] = 0
             elif Vx >= threshold:
                 phase[hand] = -1
-                if stage[hand] == "load":
-                    #count[hand] +=1
-                    to_count[hand] = True
-                    
-                    stage[hand]= "release"
-                    #print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
+                if Vx >= threshold_count:
+                    if stage[hand] == "load":
+                        #count[hand] +=1
+                        to_count[hand] = True
+                        
+                        stage[hand]= "release"
+                        #print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
 
-        if phase[0]  == phase [1]:
+        if stage[0]  == stage [1]:
             
             if to_count[0] == True or to_count[1] == True:
                 
@@ -587,7 +592,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
 
                 kp = wait_for_keypoints(q)
                 kp_story.append(kp)
-                while (len(kp_story) > 10):
+                while (len(kp_story) > STORY):
                     kp_story.pop(0)
                 #print("len kp:",len(kp_story))
 
@@ -608,7 +613,7 @@ def evaluator(EX_global, q,string_from_tcp_ID):
                 #packet = [float(count_v2[0]),float(stg)]
                 #packet = [0,0]
             
-                #print("packet", count_v2[0],stg)
+                print("packet", stg)
                 #print("stg is : ", stage_v2)
                 
                 sender.send_status(21011, count_v2[0],stg,'localhost')

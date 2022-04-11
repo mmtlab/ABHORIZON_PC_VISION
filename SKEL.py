@@ -26,6 +26,13 @@ model = 1
     
 
 def brightness(img):
+    """
+    Calculate the brightness of the current frame 
+
+    :param img: the current frame of the camera
+    
+    :return: the brightness of the image calculated from the img channels
+    """
     #funzione per il calcolo della luminosità dell immagine
 
     if len(img.shape) == 3:
@@ -39,6 +46,13 @@ def brightness(img):
 
 
 def ex_string_to_ID(ex_string):
+    """
+    convert a string (of the exercixe) into a integer ID
+
+    :param ex:string: the string describing the exercise
+    
+    :return: the id associated to the input string
+    """
     #converte una stringa esercizio nel suo ID caratteristico
     # read from ex_info 
     config = configparser.ConfigParser()
@@ -60,6 +74,13 @@ def ex_string_to_ID(ex_string):
 
 
 def writeCSVdata(ID,landmarks):
+    """
+    write data 2 CSV
+
+    :param data: write to a csv file input data (append to the end)
+    
+    :return: nothing
+    """
     #scrive su un file csv i dati estratti dalla rete Neurale
     file = open('./data/subject_n_ex_m.csv', 'a')
     writer = csv.writer(file)
@@ -84,23 +105,21 @@ def writeCSVdata(ID,landmarks):
 
 
 
-
-def write_data(data): #deprecated
-    f = open('homografy.csv', 'a')
-    writer = csv.writer(f)
-
-    writer.writerow([data])
-
-
 def returnCameraIndexes():
-    # checks the first 10 indexes of cameras usb connected
+    """
+    checks the first 10 indexes of cameras usb connected
+
+    
+    :return: an array of the opened camera index
+    """
+# checks the first 10 indexes of cameras usb connected
     index = 0
     arr = []
     i = 10
     while i > 0:
         #print("retry cap : ", index)
         cap = cv2.VideoCapture(index)
-        print("cap status :" ,cap.isOpened())
+        #print("cap status :" ,cap.isOpened())
         
         if cap.isOpened():
             print("is open! index =",index)
