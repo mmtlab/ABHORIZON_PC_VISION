@@ -13,6 +13,15 @@ import queue
 import csv
 
 def default_dictionary_control(parameter,descriptor):
+    """
+    check missing parameters and subsitute the 
+
+    :param parameter: the quantity checked by the function, if empty, the default one is chosen
+    :param descriptor: the dictionary key that identify the parameter under evaluation, it is used to access
+    it from the dictionary
+
+    :return: the parameter (if empty substituted with default)
+    """
     if parameter is None or parameter == '':
         config = configparser.ConfigParser()
         config.read('exercise_info.ini')
@@ -109,11 +118,10 @@ def ex_string_to_ID(ex_string):
 
 def ID_to_ex_string(ID):
     """
-    function description
+    convert an ID from multiproc value slot to the ex_string corresponding
 
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
+    :param ID: an int, the ID of the current exercise
+    :return: dthe ex string associated to the ID, if not fount return empty ex_string
     """
     # read from ex_info
     config = configparser.ConfigParser()
@@ -133,7 +141,7 @@ def ID_to_ex_string(ID):
     ex_string = "0"
     return ex_string
 
-
+'''
 def KP_to_render_from_config_file(dictionary):
     """
     function description
@@ -161,15 +169,15 @@ def KP_to_render_from_config_file(dictionary):
     # print(dictionary)
     return dictionary
 
-
+'''
 
 def dictionary_string_2_machine_param(value):
     """
-    function description
+    this function translate human understandable parameter for the ex.
+    evaluation to the machine lanmguage for the cinematic analisys
 
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
+    :param value: the human interpreted parameter
+    :return: the machine understandable parameters
     """
     # extract the Kps of the exercise fron the ini file
     config_geometrical = configparser.ConfigParser()
@@ -193,11 +201,11 @@ def dictionary_string_2_machine_param(value):
 def ex_string_to_config_param(ex_string):
     print("string", ex_string)
     """
-    function description
+    convert the ex string to a dictionary with all the config instrunctions
+    check also if there are missing paramers, and subsitute it with default value
 
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
+    :param ex_string: the exercise string identifing the exercise
+    :return: the dictionary associated to the exercise
     """
     # take all info of the exercise from the config files, write on a dictionary
     # read from ex_info
@@ -281,11 +289,10 @@ def ex_string_to_config_param(ex_string):
 
 def wait_for_keypoints(queuekp):
     """
-    function description
+    function in loop stucked until new keypoints are aviable in the multiprocessing queue
 
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
+    :param queuekp: a multiprocessing queue filled with an array of keypoint and consumed by this function
+    :return: consume and return the keypoints from the queue making aviable to this process (evaluator)
     """
     # loop 4 waiting the queue of KP from mediapipe
     keypoints = []
@@ -308,11 +315,9 @@ def wait_for_keypoints(queuekp):
 
 def check_for_string_in_memory(multiprocessing_value_slot):
     """
-    function description
-
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
+    check the presence in the memory of an exercise ID and convert it to a tring  
+    :param multiprocessing_value_slot: the memory slot where ID are saved
+    :return: the string associated to the ID
     """
     # return the exercise written in the shared memory (if prresent)
     ex_ID = multiprocessing_value_slot
@@ -324,7 +329,7 @@ def check_for_string_in_memory(multiprocessing_value_slot):
 
 def TCP_listen_check_4_string(string_from_tcp_ID, ex_string_recived):
     """
-    function description
+    function for listen the subprocess that communicate with the interface and coordiunator. 
 
     :param param1: description of param1
     :param param2: description of param2
@@ -474,7 +479,104 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
 
     return eval_data, count, phase, stage
 
+def velocity_tracker_angle(eval_data, kp_history, count, dictionary, stage):
+    """
+    compute distance from specific  joints of the ex and the compatible target,
+    calculate it's velocity over a moving avarege of the distances and
+    interpret the stage of th movement based on the sign of the velocity
 
+    :param eval_data: last distance and velocity of the joint target points
+    :param kp_history: last n (10) set of keypoint in the past
+    :param count: current count of the ex repetitions (permanent in memory)
+    :param dictionary: python dict with all info about the current exercise
+    (interprete from config files)
+    :param stage: the velocity trigger for counting
+    :return: eval_data, count, phase the first two from memory are here fulfilled,
+    phase is the velocity descriptor for retroacting motors
+    """
+    phase = [0, 0]
+    to_count = [False, False]
+
+    w = 0.5
+    
+    STORY = dictionary["motor_history_events"]
+    joints_to_evaluate = dictionary["joints_to_evaluate"]
+    evaluation_range = dictionary["evaluation_range"]
+    threshold = evaluation_range[0]
+    threshold_count = evaluation_range[1]
+    
+
+    if len(kp_history) > STORY - 1:
+
+        side = int(len(joints_to_evaluate))  #two array one for every arm
+        old_value = []
+
+        for hand in range(side): #0-1
+            #6 coordinate 3 punti 1 angolo
+            IDx1 = joints_to_evaluate[hand][0]
+            IDy1 = joints_to_evaluate[hand][1] #id del giunto mano x e y
+            IDx2 = joints_to_evaluate[hand][2]
+            IDy2 = joints_to_evaluate[hand][3]
+            IDx3 = joints_to_evaluate[hand][4]
+            IDy3 = joints_to_evaluate[hand][5]
+
+            
+            A_time = []
+
+            for i in range(len(kp_history)):
+                X1 = kp_history[i][IDx1]
+                Y1 = kp_history[i][IDy1]
+                X2 = kp_history[i][IDx2]
+                Y2 = kp_history[i][IDy2]
+                X3 = kp_history[i][IDx3]
+                Y3 = kp_history[i][IDy3]
+                A_i = findAngle((X1,Y1),(X2,Y2),(X3,Y3))
+                A_time.append(A_i)
+            A_m = np.median(A_time) #distanza media da target adesso
+            A_p_m = eval_data[hand] #vecchia angolo media
+
+            V_p = eval_data[hand + 2] #vecchia velocità
+            # calcolo V istantanea guardando la media dei valori precedenti e la velocità del frame precedente
+            Vx = V_p * w + (A_m - A_p_m) * (1 - w)
+            # trascrivo i valori di Dmedia e Vi sui dati di valutazione per la prox iterazione
+            eval_data[hand] = A_m
+            eval_data[hand + 2] = Vx
+
+            old_value.append(V_p)
+            # print("CHNNNDNT:",  hand)
+
+            if Vx >= threshold:
+                phase[hand] = 1
+                if Vx >= threshold_count:
+                    stage[hand] = "load"
+            elif Vx < threshold and Vx > -threshold:
+                # stage[hand] = "pause"
+                phase[hand] = 0
+            elif Vx <= -threshold:
+                phase[hand] = -1
+                if Vx <= -threshold_count:
+                    if stage[hand] == "load":
+                        # count[hand] +=1
+                        to_count[hand] = True
+
+                        stage[hand] = "release"
+                        # print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
+        #print("ang_vel: ", Vx)
+        if stage[0] == stage[1]:
+
+            if to_count[0] == True or to_count[1] == True:
+                count[0] += 1
+                count[1] += 1
+                print("phase : ", count)
+                print("ANGLE____COUNTED!!! : ", stage, eval_data[2], eval_data[3])
+
+        # print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
+
+
+    else:
+        print("need story data to tune evaluator")
+
+    return eval_data, count, phase, stage
 
 def specific_joints_evaluator(kp,story, dictionary):
     # funzione per il conteggio esercizi
@@ -531,12 +633,28 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     story_specific = []
     eval_data = [0, 0, 0, 0]
     stage_v2 = [0, 0]
+    #history of angle and angular velocity
+    eval_data_angle = [0, 0, 0, 0]
+    
+    #stage phase for angle dynamics
+    stage_v2_angle = [0, 0]
+    
     config_param_dictionary ={}
 
     stage = ["", ""]
+    
+    #stage for angle velocity traker
+    #(histeresis memorized phase for triggering counting)
+    stage_angle = ["", ""]
+    
     per = [0, 0]
 
-    count = [0, 0]
+    count_v2 = [0, 0]
+    
+    #count for angle velocity traker
+    count_v2_angle = [0, 0]
+    
+    
     ex_string_from_TCP = ""  # comando arrivato dalla tcp
     ex_string = ""  # comando letto dalla memoria
 
@@ -558,9 +676,14 @@ def evaluator(EX_global, q, string_from_tcp_ID):
             # refreshing parameter of exercise
             ex_string_from_TCP = ""
             count = [0, 0]
+            count_angle = [0, 0]
             count_v2 = [0, 0]
+            count_v2_angle = [0, 0]
+            stage_angle = ["", ""]
             stage = ["", ""]
+            
             stage_v2 = [0, 0]
+            stage_v2_angle = [0, 0]
             EX_global.value = 0
             ex_string = ""
             config_param_dictionary = {}
@@ -618,7 +741,10 @@ def evaluator(EX_global, q, string_from_tcp_ID):
 
                 eval_data, count_v2, stage_v2, stage = kp_geometry_analisys_v2(eval_data, kp_story, count_v2,
                                                                                config_param_dictionary, stage)
-                story_specific, per , angle = specific_joints_evaluator(kp,story_specific, config_param_dictionary)
+                #story_specific, per , angle = specific_joints_evaluator(kp,story_specific, config_param_dictionary)
+                
+                eval_data_angle, count_v2_angle, stage_v2_angle, stage_angle = velocity_tracker_angle(eval_data_angle, kp_story, count_v2_angle,
+                                                                               config_param_dictionary, stage_angle)
                 # count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
                 # print("count. ",count)
                 if len(story_specific) >5:
@@ -628,6 +754,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 if state_value > 0:
                     stg = 1
                 if state_value == 0:
+                
                     if stage_v2[0] == stage_v2[1]:
                         stg = 0
                     else:

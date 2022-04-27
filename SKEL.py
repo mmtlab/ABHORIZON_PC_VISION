@@ -50,7 +50,7 @@ def ex_string_to_ID(ex_string):
     """
     convert a string (of the exercixe) into a integer ID
 
-    :param ex:string: the string describing the exercise
+    :param ex_string: the string describing the exercise
 
     :return: the id associated to the input string
     """
@@ -209,48 +209,6 @@ class Undistorter:
         return undistorted_img
 
 
-def undistort180(img):
-    '''
-    DIM=(480, 240)
-    K=np.array([[293.5116081746901, 0.0, 243.25387145248732], [0.0, 260.4055747091259, 104.82988114365413], [0.0, 0.0, 1.0]])
-    D=np.array([[-0.03576268944984472], [0.057197056735017134], [-0.16392042989226446], [0.12922000339789327]])
-    '''
-    # 180 usb fisheye
-    DIM = (640, 480)
-
-    K = np.array(
-        [[256.08951474686006, 0.0, 338.0670093090018], [0.0, 256.106658840997, 249.32266973335038], [0.0, 0.0, 1.0]])
-    D = np.array([[-0.03532111776488767], [-0.015025999952290566], [0.00976541095811982], [-0.0033155746136321975]])
-    h, w = img.shape[:2]
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-    undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    return undistorted_img
-
-
-def undistort(img):
-    DIM = (640, 480)
-    K = np.array(
-        [[499.95795693114394, 0.0, 299.98932387422747], [0.0, 499.81738564423085, 233.07326875070703], [0.0, 0.0, 1.0]])
-    D = np.array([[-0.12616907524146279], [0.4164021464039151], [-1.6015342220517828], [2.094848806959125]])
-
-    h, w = img.shape[:2]
-    # start = time.time()
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-    # print("DONE! completed map1 and 2, dim = ", map1.shape, map2.shape)
-
-    # end = time.time()
-    # seconds = end - start
-    # start1 = time.time()
-    undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    # end1 = time.time()
-    # seconds1 = end1 - start1
-    # write_data([seconds,seconds1])
-    return undistorted_img
-
-
-# old stitcher
-
-
 
 def ID_to_ex_string(ID):
     """
@@ -275,7 +233,7 @@ def ID_to_ex_string(ID):
             return ex_string
 
     # print("no ID found")
-    ex_string = "0"
+    ex_string = ""
     return ex_string
 
 
@@ -315,6 +273,13 @@ def rendering_kp_on_frame(joints,kp,img):
 
 
 def read_shared_mem_for_ex_string(mem_ex_value):
+    """
+    read the multiprocessing memory every frame to check new command/exercise
+
+    :param mem_ex_value: the ID describing the exercise saved on the multiproc memory
+
+    :return: the string associated to the memory ID
+    """
     # controlla la memoria condivisa e estrae l esercizio salvato
     if mem_ex_value == 0:
         ex_string = ""
@@ -328,34 +293,17 @@ def read_shared_mem_for_ex_string(mem_ex_value):
 
 
 
-'''
-def landmarks2KP(landmarks, image):
-    #converte i landmark prodotti da mediapipe in un array di coord x y
-    image_width, image_height = image.shape[1], image.shape[0]
-    keypoints = []
-
-    keypoints_simply = []
-
-    for index, landmark in enumerate(landmarks.landmark):
-
-
-        landmark_x = min(int(landmark.x * image_width), image_width - 1)
-        landmark_y = min(int(landmark.y * image_height), image_height - 1)
-        landmark_z = landmark.z
-        keypoints.append[landmark_x,landmark_y]
-
-    np.median(keypoints[0:10], axis = 0)
-    np.median([keypoints[15],keypoints[17],keypoints[19],keypoints[21]], axis = 0)
-    np.median([keypoints[16],keypoints[18],keypoints[20],keypoints[22]], axis = 0)
-    np.median([keypoints[27],keypoints[29],keypoints[31]], axis = 0)
-    np.median([keypoints[28],keypoints[30],keypoints[32]], axis = 0)      
-
-
-    return keypoints
-'''
-
 
 def landmarks2KP(landmarks, image):
+    """
+    convert mediapipe landmark object in an array of coordinate of the foundam,ental keypoints of the body,
+    some joints are syntetized in one to simplify the skeleton render and repetability 
+    :param landmarks: mediapipe object containing the coordinate, visibility and confidence of the detected joints
+    :param image: the image Matrix, input of the neural network, its dimension is used to convert absolute coordinate (0-1) to
+    pixel coordinate (0 -image dim)
+
+    :return: the array containing the coordinate in pixel of the joints detected
+    """
     image_width, image_height = image.shape[1], image.shape[0]
     keypoints = []
     keypoints_simply = []
@@ -398,6 +346,14 @@ def landmarks2KP(landmarks, image):
 
 
 def skeletonizer(KP_global, EX_global, q):
+    """
+    Main function of the skeletonizer, perform camera management, neural network detection, rendering, and image streaming
+    :param EX_global: ID of the current exercise/state saved in the multiprocessing memory
+    :param q: the multiprocessing queue where kp are put by the skeletonizer and consumed  by the evaluator
+
+    :return: nothing
+    """
+    
     # corpo del codice con ini camere e rete neurale
     # printing process id
     print("ID of process running worker1: {}".format(os.getpid()))
