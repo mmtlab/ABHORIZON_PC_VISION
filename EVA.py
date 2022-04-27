@@ -12,6 +12,9 @@ import statistics
 import queue
 import csv
 
+
+default_cooldown = 50
+
 def default_dictionary_control(parameter,descriptor):
     """
     check missing parameters and subsitute the 
@@ -386,7 +389,7 @@ def findAngle(p1, p2, p3):
     return angle
 
 
-def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
+def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
     """
     compute distance from specific  joints of the ex and the compatible target,
     calculate it's velocity over a moving avarege of the distances and
@@ -403,6 +406,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
     """
     phase = [0, 0]
     to_count = [False, False]
+    count =[0,0]
 
     w = 0.5
     threshold = dictionary["threshold"]
@@ -466,10 +470,10 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
         if stage[0] == stage[1]:
 
             if to_count[0] == True or to_count[1] == True:
-                count[0] += 1
-                count[1] += 1
-                print("phase : ", count)
-                print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
+                count[0] = 1
+                count[1] = 1
+               
+                #print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
 
         # print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
 
@@ -479,7 +483,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, count, dictionary, stage):
 
     return eval_data, count, phase, stage
 
-def velocity_tracker_angle(eval_data, kp_history, count, dictionary, stage):
+def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
     """
     compute distance from specific  joints of the ex and the compatible target,
     calculate it's velocity over a moving avarege of the distances and
@@ -496,7 +500,8 @@ def velocity_tracker_angle(eval_data, kp_history, count, dictionary, stage):
     """
     phase = [0, 0]
     to_count = [False, False]
-
+    count = [0,0]
+    
     w = 0.5
     
     STORY = dictionary["motor_history_events"]
@@ -565,10 +570,10 @@ def velocity_tracker_angle(eval_data, kp_history, count, dictionary, stage):
         if stage[0] == stage[1]:
 
             if to_count[0] == True or to_count[1] == True:
-                count[0] += 1
-                count[1] += 1
-                print("phase : ", count)
-                print("ANGLE____COUNTED!!! : ", stage, eval_data[2], eval_data[3])
+                count[0] = 1
+                count[1] = 1
+                
+                #print("ANGLE____COUNTED!!! : ", stage, eval_data[2], eval_data[3])
 
         # print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
 
@@ -611,6 +616,21 @@ def specific_joints_evaluator(kp,story, dictionary):
         #print("angle:", angle)
 
         return story, per , angle
+    
+    
+def compared_counting(compared_count,count_target, count_angle,cooldown_frame):
+    #print("calldown",cooldown_frame)
+    if cooldown_frame < 1:
+        if count_target[0] == 1 or count_angle[0] == 1:
+            compared_count += 1
+            cooldown_frame = default_cooldown
+            
+            print("counted: ", compared_count)
+    else:
+        if cooldown_frame != 0:
+            cooldown_frame -= 1
+               
+    return compared_count, cooldown_frame
 
 
 def evaluator(EX_global, q, string_from_tcp_ID):
@@ -633,6 +653,11 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     story_specific = []
     eval_data = [0, 0, 0, 0]
     stage_v2 = [0, 0]
+    
+    
+    #frame to wait before next counting
+    cooldown_frame =  default_cooldown
+    
     #history of angle and angular velocity
     eval_data_angle = [0, 0, 0, 0]
     
@@ -649,10 +674,10 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     
     per = [0, 0]
 
-    count_v2 = [0, 0]
-    
+
+    compared_count = 0
     #count for angle velocity traker
-    count_v2_angle = [0, 0]
+
     
     
     ex_string_from_TCP = ""  # comando arrivato dalla tcp
@@ -681,6 +706,10 @@ def evaluator(EX_global, q, string_from_tcp_ID):
             count_v2_angle = [0, 0]
             stage_angle = ["", ""]
             stage = ["", ""]
+            
+            #conteggio totale
+            compared_count = 0
+
             
             stage_v2 = [0, 0]
             stage_v2_angle = [0, 0]
@@ -739,12 +768,16 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                     
                 # print("len kp:",len(kp_story))
 
-                eval_data, count_v2, stage_v2, stage = kp_geometry_analisys_v2(eval_data, kp_story, count_v2,
+                eval_data, count_v2, stage_v2, stage = kp_geometry_analisys_v2(eval_data, kp_story,
                                                                                config_param_dictionary, stage)
                 #story_specific, per , angle = specific_joints_evaluator(kp,story_specific, config_param_dictionary)
                 
-                eval_data_angle, count_v2_angle, stage_v2_angle, stage_angle = velocity_tracker_angle(eval_data_angle, kp_story, count_v2_angle,
-                                                                               config_param_dictionary, stage_angle)
+                eval_data_angle, count_v2_angle, stage_v2_angle, stage_angle = velocity_tracker_angle(eval_data_angle, kp_story,
+                                                                                                     config_param_dictionary, stage_angle)
+                
+                
+                #print("angle, trigger",count_v2_angle,count_v2) 
+                compared_count, cooldown_frame  = compared_counting(compared_count,count_v2, count_v2_angle,cooldown_frame)
                 # count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
                 # print("count. ",count)
                 if len(story_specific) >5:
@@ -777,7 +810,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 #print("act: ", stg)
                 # print("stg is : ", stage_v2)
 
-                sender.send_status(21011, count_v2[0], stg, 'localhost')
+                sender.send_status(21011, compared_count, stg, 'localhost')
                 # sender.send_status(21011, 5,0,'localhost')
 
 
