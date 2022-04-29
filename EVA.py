@@ -437,7 +437,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
                 YM_i = kp_history[i][IDy_m]
                 D_i = pow((XM_i - xt), 2) + pow((YM_i - yt), 2)
                 D_time.append(D_i)
-            D_m = np.median(D_time) #distanza media da target adesso
+            D_m = np.mean(D_time) #distanza media da target adesso
             D_p_m = eval_data[hand] #vecchia distanza media
 
             V_p = eval_data[hand + 2] #vecchia velocità
@@ -466,7 +466,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
 
                         stage[hand] = "release"
                         # print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
-        #print("eval", eval_data[2])
+        #print("eval", eval_data[0])
 
         if stage[0] == stage[1]:
 
@@ -539,7 +539,7 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
                 Y3 = kp_history[i][IDy3]
                 A_i = findAngle((X1,Y1),(X2,Y2),(X3,Y3))
                 A_time.append(A_i)
-            A_m = np.median(A_time) #distanza media da target adesso
+            A_m = np.mean(A_time) #distanza media da target adesso
             A_p_m = eval_data[hand] #vecchia angolo media
 
             V_p = eval_data[hand + 2] #vecchia velocità
