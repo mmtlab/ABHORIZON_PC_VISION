@@ -466,12 +466,14 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
 
                         stage[hand] = "release"
                         # print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
+        #print("eval", eval_data[2])
 
         if stage[0] == stage[1]:
 
             if to_count[0] == True or to_count[1] == True:
                 count[0] = 1
                 count[1] = 1
+
                
                 #print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
 
@@ -543,30 +545,57 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
             V_p = eval_data[hand + 2] #vecchia velocità
             # calcolo V istantanea guardando la media dei valori precedenti e la velocità del frame precedente
             Vx = V_p * w + (A_m - A_p_m) * (1 - w)
+            
             # trascrivo i valori di Dmedia e Vi sui dati di valutazione per la prox iterazione
             eval_data[hand] = A_m
             eval_data[hand + 2] = Vx
 
             old_value.append(V_p)
             # print("CHNNNDNT:",  hand)
+        
+            if threshold > 0:
+                if Vx >= threshold:
+                    phase[hand] = 1
+                    if Vx >= threshold_count:
+                        stage[hand] = "load"
+                        
+                elif Vx < threshold and Vx > -threshold:
+                    # stage[hand] = "pause"
+                    phase[hand] = 0
+                elif Vx <= -threshold:
+                    phase[hand] = -1
+                    if Vx <= -threshold_count:
+                        if stage[hand] == "load":
+                            # count[hand] +=1
+                            to_count[hand] = True
 
-            if Vx >= threshold:
-                phase[hand] = 1
-                if Vx >= threshold_count:
-                    stage[hand] = "load"
-            elif Vx < threshold and Vx > -threshold:
-                # stage[hand] = "pause"
-                phase[hand] = 0
-            elif Vx <= -threshold:
-                phase[hand] = -1
-                if Vx <= -threshold_count:
-                    if stage[hand] == "load":
-                        # count[hand] +=1
-                        to_count[hand] = True
+                            stage[hand] = "release"
+            else:
+                if Vx <= threshold:
+                    phase[hand] = 1
+                    if Vx <= threshold_count:
+                        stage[hand] = "load"
+                        
+                elif Vx > threshold and Vx < -threshold:
+                    # stage[hand] = "pause"
+                    phase[hand] = 0
+                elif Vx >= -threshold:
+                    phase[hand] = -1
+                    if Vx >= -threshold_count:
+                        if stage[hand] == "load":
+                            # count[hand] +=1
+                            to_count[hand] = True
 
-                        stage[hand] = "release"
+                            stage[hand] = "release"
+                            
+                            
+                        
+                        
+        
+                
                         # print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
         #print("ang_vel: ", Vx)
+        #print("vel: ",eval_data[3])
         if stage[0] == stage[1]:
 
             if to_count[0] == True or to_count[1] == True:
@@ -622,8 +651,13 @@ def compared_counting(compared_count,count_target, count_angle,cooldown_frame):
     #print("calldown",cooldown_frame)
     if cooldown_frame < 1:
         if count_target[0] == 1 or count_angle[0] == 1:
+        #if count_angle[0] == 1:
             compared_count += 1
             cooldown_frame = default_cooldown
+            if count_target[0] == 1:
+                print("target trigger")
+            else:
+                print("angle trigger")
             
             print("counted: ", compared_count)
     else:
@@ -807,7 +841,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 # packet = [float(count_v2[0]),float(stg)]
                 # packet = [0,0]
 
-                #print("act: ", stg)
+                print("act: ", stg)
                 # print("stg is : ", stage_v2)
 
                 sender.send_status(21011, compared_count, stg, 'localhost')

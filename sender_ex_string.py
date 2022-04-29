@@ -18,7 +18,7 @@ def main():
 
     ip = '127.0.0.1'
 
-    status = ["biceps_curl ", "start ","pause ","start ", "stop ", "biceps_curl ", "start ", "pause ","start ", "stop "]
+    status = ["high_elbow_curl ", "start ","pause ","start ", "stop ", "high_elbow_curl ", "start ", "pause ","start ", "stop "]
     port = 21001
     print("sending config: IP = {}, PORT = {}. ".format(ip, port))
 
@@ -26,7 +26,7 @@ def main():
     while True:
         for i in range(len(status)):
             ex_string_recived = status[i]
-            time.sleep(15)
+            time.sleep(12)
 
             BUFFER_SIZE = 1024
 

@@ -19,7 +19,7 @@ camera_index_secondary = 1
 camera_index_primary = 0
 recording = False
 writing = False
-showing = True
+showing = False
 printing_FPS = False
 model = 1
 
@@ -371,10 +371,10 @@ def skeletonizer(KP_global, EX_global, q):
         print("2 camera system")
 
         cap = cv2.VideoCapture(camera_index[camera_index_primary])
-        #cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+        cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
 
-        path = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_z_ex_1.avi"
-        cap1 = cv2.VideoCapture(path)
+        #path = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_z_ex_1.avi"
+        #cap1 = cv2.VideoCapture(path)
 
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
@@ -456,11 +456,11 @@ def skeletonizer(KP_global, EX_global, q):
                 if ID >= 50 and ID <= 99:
                     success, image = cap1.read()  #capture low camera
                     if ID < 80:
-                        #image = undistorter.undistortOPT180(image) #correct distortion
+                        image = undistorter.undistortOPT180(image) #correct distortion
                         pass
-                    #image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-                    #image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
-
+                    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+                    image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
+                    #print("___________co0rrs")
 
                 else:
                     success, image = cap.read()
@@ -473,7 +473,7 @@ def skeletonizer(KP_global, EX_global, q):
             else:
                 success, image = cap.read()
                 image = undistorter.undistortOPT(image)
-                image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+                #image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
             # image = image[180:frame_width1, 70:frame_height1-70]
 
