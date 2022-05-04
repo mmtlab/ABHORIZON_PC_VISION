@@ -11,9 +11,42 @@ import sender
 import statistics
 import queue
 import csv
+import logging
 
 
-default_cooldown = 50
+
+data_collection=True
+default_cooldown = 60
+logging3 = logging.getLogger('EVA')
+logging3.setLevel(logging.DEBUG)
+fh3 = logging.FileHandler('EVA.log')
+fh3.setLevel(logging.DEBUG)
+logging3.addHandler(fh3)
+logging3.info(".............................................")
+
+logging3.info("____!!!!!!!_____starting time____!!!!!!!_____: %s",datetime.now())
+logging3.info(".............................................")
+
+
+
+def writeCSVdata(data):
+    """
+    write data 2 CSV
+
+    :param data: write to a csv file input data (append to the end)
+
+    :return: nothing
+    """
+    # scrive su un file csv i dati estratti dalla rete Neurale
+    file = open('./data/ex_data.csv', 'a')
+    writer = csv.writer(file)
+    now = datetime.now()
+    time = now.strftime("%d/%m/%Y %H:%M:%S")
+
+    writer.writerow(data)
+    file.close()
+
+
 
 def default_dictionary_control(parameter,descriptor):
     """
@@ -29,8 +62,8 @@ def default_dictionary_control(parameter,descriptor):
         config = configparser.ConfigParser()
         config.read('exercise_info.ini')
         parameter = config.get('default', descriptor)
-        print("missing parameter :", descriptor)
-        print("automaticcally selected the default one")
+        logging3.warning("missing parameter :", descriptor)
+        logging3.warning("automaticcally selected the default one")
         return parameter
     return parameter
 
@@ -93,6 +126,9 @@ def no_ex_cycle_control(string_from_tcp_ID, ex_string):
 def ex_string_to_ID(ex_string):
     """
     read from ex_info string and convert to integer ID of exercise
+    if id is missing or incompletethe code will take the default one and pass directly
+    to the dictionary, that will complete it with other defoul param without checkin
+    the existence of other parameters
 
     :param ex_string: string of the name of the exercise
     :param param2: none
@@ -108,14 +144,18 @@ def ex_string_to_ID(ex_string):
         if exercise == ex_string:
             # config.get("test", "foo")
 
-            ID = config.get(exercise, 'ID')
-            ID = int(default_dictionary_control(ID,"ID")) #controllo che non sia vuoto
-            #se ID vuoto associo quello di default
+            try:
+                ID = config.get(exercise, 'ID')
+            except:
+                logging3.warning("missing line of config, switch to default ID")
+                ID = config.get("default", 'ID')
+            ID = int(default_dictionary_control(ID, 'ID'))
+            
             return ID
         
     ex_string = "default" #se durante il ciclo for non c e match
     ID = ex_string_to_ID(ex_string) #se ex_string non riconosciuta prendo quela di default
-    print("not recognised exercise- switching to default...")
+    logging3.warning("not recognised exercise- switching to default...")
     return ID
 
 
@@ -202,11 +242,12 @@ def dictionary_string_2_machine_param(value):
 
 
 def ex_string_to_config_param(ex_string):
-    print("string", ex_string)
+    logging3.info("string: %s", ex_string)
     """
     convert the ex string to a dictionary with all the config instrunctions
     check also if there are missing paramers, and subsitute it with default value
-
+    if ID is missing the default one are choosen and also other parameters so you will lose all
+    of the other section (the incomplete but also the filled ones)
     :param ex_string: the exercise string identifing the exercise
     :return: the dictionary associated to the exercise
     """
@@ -224,37 +265,73 @@ def ex_string_to_config_param(ex_string):
 
         if exercise == ex_string:
             # config.get("test", "foo")
-
-            segments_to_render = config.get(exercise, 'segments_to_render')
+            
+            try:
+                segments_to_render = config.get(exercise, 'segments_to_render')
+            except:
+                logging3.warning("missing line of config, switch to default segments_to_render")
+                segments_to_render = config.get("default", 'segments_to_render')    
             segments_to_render = default_dictionary_control(segments_to_render, 'segments_to_render')
             segments_to_render = segments_to_render.split(',')
-
-            joints_to_evaluate = config.get(exercise, 'joints_to_evaluate')
+            
+            try:
+                joints_to_evaluate = config.get(exercise, 'joints_to_evaluate')
+            except:
+                logging3.warning("missing line of config, switch to default joints_to_evaluate")
+                joints_to_evaluate = config.get("default", 'joints_to_evaluate')
             joints_to_evaluate = default_dictionary_control(joints_to_evaluate, 'joints_to_evaluate')
             joints_to_evaluate = joints_to_evaluate.split(',')
-
-            evaluation_range = config.get(exercise, 'evaluation_range')
+            
+            try:
+                evaluation_range = config.get(exercise, 'evaluation_range')
+            except:
+                logging3.warning("missing line of config, switch to default evaluation_range")    
+                evaluation_range = config.get("default", 'evaluation_range')
             evaluation_range = default_dictionary_control(evaluation_range, 'evaluation_range')
             evaluation_range = [int(x) for x in evaluation_range.split(",")]
-
-            ID = config.get(exercise, 'ID')
+            
+            try:
+                ID = config.get(exercise, 'ID')
+            except:
+                logging3.warning("missing line of config, switch to default ID")
+                ID = config.get("default", 'ID')
             ID = int(default_dictionary_control(ID, 'ID'))
-
-            joints_with_ropes = config.get(exercise, 'joints_with_ropes')
+            
+            try:          
+                joints_with_ropes = config.get(exercise, 'joints_with_ropes')
+            except:
+                logging3.warning("missing line of config, switch to default joints_with_ropes")
+                joints_with_ropes = config.get("default", 'joints_with_ropes')
             joints_with_ropes = default_dictionary_control(joints_with_ropes, 'joints_with_ropes')
             joints_with_ropes = joints_with_ropes.split(',')
-
-            target_bar = config.get(exercise, 'target_bar')
+            
+            try:
+                target_bar = config.get(exercise, 'target_bar')
+            except:
+                logging3.warning("missing line of config, switch to default target_bar")
+                target_bar = config.get("default", 'target_bar')
             target_bar = default_dictionary_control(target_bar, 'target_bar')
             target_bar = target_bar.split(',')
-
-            threshold = config.get(exercise, 'threshold')
+            
+            try:           
+                threshold = config.get(exercise, 'threshold')
+            except:
+                logging3.warning("missing line of config, switch to default threshold")
+                threshold = config.get("default", 'threshold')
             threshold = int(default_dictionary_control(threshold, 'threshold'))
 
-            motor_history_events = config.get(exercise, 'motor_history_events')
+            try:
+                motor_history_events = config.get(exercise, 'motor_history_events')
+            except:
+                logging3.warning("missing line of config, switch to default motor_history_events")
+                motor_history_events = config.get("default", 'motor_history_events')
             motor_history_events = int(default_dictionary_control(motor_history_events, 'motor_history_events'))
-
-            threshold_count = config.get(exercise, 'threshold_count')
+            
+            try:
+                threshold_count = config.get(exercise, 'threshold_count')
+            except:
+                logging3.warning("missing line of config, switch to default threshold_count")
+                threshold_count = config.get("default", 'threshold_count')
             threshold_count = int(default_dictionary_control(threshold_count, 'threshold_count'))
 
             # print("joints and target : ", joints_target)
@@ -281,7 +358,7 @@ def ex_string_to_config_param(ex_string):
                         dictionary[key] = num_value
 
             return dictionary
-    print("no exercise found, switch to default, string recived:", ex_string)
+    logging3.warning("no exercise found, switch to default, string recived:", ex_string)
     dictionary = ex_string_to_config_param("default")
     return dictionary
 
@@ -311,7 +388,7 @@ def wait_for_keypoints(queuekp):
         else:
 
             if not keypoints:
-                print("no valid kp")
+                logging3.error("no valid kp")
             else:
                 return keypoints
 
@@ -389,7 +466,7 @@ def findAngle(p1, p2, p3):
     return angle
 
 
-def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
+def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filter_state):
     """
     compute distance from specific  joints of the ex and the compatible target,
     calculate it's velocity over a moving avarege of the distances and
@@ -401,6 +478,8 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
     :param dictionary: python dict with all info about the current exercise
     (interprete from config files)
     :param stage: the velocity trigger for counting
+    :param retro_filter_state: the history state for controlling the jitter
+    in the retroacting variable phase. present also in the return, work as a phase memory
     :return: eval_data, count, phase the first two from memory are here fulfilled,
     phase is the velocity descriptor for retroacting motors
     """
@@ -451,14 +530,27 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
             # print("CHNNNDNT:",  hand)
 
             if Vx >= threshold:
-                phase[hand] = 1
+                if retro_filter_state[hand] != "retro":
+                    phase[hand] = 1
+                    retro_filter_state[hand] = "traction"
+                else:
+                    phase[hand] = 0
+                    retro_filter_state[hand] = "neutral"
+                    logging3.debug("new traction smoothed in neutral")
                 if Vx >= threshold_count:
                     stage[hand] = "load"
             elif Vx < threshold and Vx > -threshold:
                 # stage[hand] = "pause"
                 phase[hand] = 0
+                retro_filter_state[hand] = "neutral"
             elif Vx <= -threshold:
-                phase[hand] = -1
+                if retro_filter_state[hand] != "traction":
+                    phase[hand] = -1
+                    retro_filter_state[hand] = "retro"
+                else:
+                    phase[hand] = 0
+                    logging3.debug("new retro smoothed in neutral")
+                    retro_filter_state[hand] = "neutral"
                 if Vx <= -threshold_count:
                     if stage[hand] == "load":
                         # count[hand] +=1
@@ -481,9 +573,9 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage):
 
 
     else:
-        print("need story data to tune evaluator")
+        logging3.warning("need story data to tune evaluator")
 
-    return eval_data, count, phase, stage
+    return eval_data, count, phase, stage, retro_filter_state
 
 def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
     """
@@ -608,7 +700,7 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
 
 
     else:
-        print("need story data to tune evaluator")
+        logging3.warning("need story data to tune evaluator")
 
     return eval_data, count, phase, stage
 
@@ -617,7 +709,7 @@ def specific_joints_evaluator(kp,story, dictionary):
     # confronta le posizioni dei giunti con le soglie stabilite dai file di configurazione
     # differenzia tra confronto di angoli e di distanze
     if kp == []:
-        print("no KP aviable")
+        logging3.error("no KP aviable")
     else:
 
         evaluation_range = dictionary["evaluation_range"]
@@ -655,11 +747,11 @@ def compared_counting(compared_count,count_target, count_angle,cooldown_frame):
             compared_count += 1
             cooldown_frame = default_cooldown
             if count_target[0] == 1:
-                print("target trigger")
+                logging3.info("TARGET trigger count")
             else:
-                print("angle trigger")
+                logging3.info("ANGLE trigger count")
             
-            print("counted: ", compared_count)
+            logging3.info("counted: %s", compared_count)
     else:
         if cooldown_frame != 0:
             cooldown_frame -= 1
@@ -679,7 +771,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     """
     # funzione main per l evaluator, gestisce le sub funzioni e lavora come una macchina a stati
     # printing process id
-    print("ID of process running evaluator: {}".format(os.getpid()))
+    logging3.info("ID of process running evaluator: {}".format(os.getpid()))
 
     # time.sleep(3)
     kp = []
@@ -688,6 +780,8 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     eval_data = [0, 0, 0, 0]
     stage_v2 = [0, 0]
     
+    #variable for story of stg
+    retro_filter_state = ["neutral","neutral"]
     
     #frame to wait before next counting
     cooldown_frame =  default_cooldown
@@ -802,8 +896,8 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                     
                 # print("len kp:",len(kp_story))
 
-                eval_data, count_v2, stage_v2, stage = kp_geometry_analisys_v2(eval_data, kp_story,
-                                                                               config_param_dictionary, stage)
+                eval_data, count_v2, stage_v2, stage, retro_filter_state = kp_geometry_analisys_v2(eval_data, kp_story,
+                                                                               config_param_dictionary, stage,retro_filter_state)
                 #story_specific, per , angle = specific_joints_evaluator(kp,story_specific, config_param_dictionary)
                 
                 eval_data_angle, count_v2_angle, stage_v2_angle, stage_angle = velocity_tracker_angle(eval_data_angle, kp_story,
@@ -821,9 +915,11 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 if state_value > 0:
                     stg = 1
                 if state_value == 0:
+                    
                 
                     if stage_v2[0] == stage_v2[1]:
                         stg = 0
+                       
                     else:
                         stg = 1
                 if state_value < 0:
@@ -834,14 +930,16 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                     #else:
                     #   stg = 0
                     
-               
-
+            
+                if data_collection == True:
+                    data = ["d_media e velocità",eval_data,"alpha_medio e velocità",eval_data_angle,"retroact_ param",stg]
+                    writeCSVdata(data)
                 ##packet = str(max(count)) + "," + str(int(max(per)))
                 # packet = str(max(count_v2)) + "," + str(int(stg))
                 # packet = [float(count_v2[0]),float(stg)]
                 # packet = [0,0]
 
-                print("act: ", stg)
+                logging3.debug("act: %s", stg)
                 # print("stg is : ", stage_v2)
 
                 sender.send_status(21011, compared_count, stg, 'localhost')

@@ -3,13 +3,86 @@ import multiprocessing
 import os
 import time
 import receiver
-
+import signal
+import logging
+from datetime import datetime
 
 import sender
 import configparser
 import EVA
 import SKEL
 import ctypes
+import psutil
+
+#logging.basicConfig(filename='MAIN_LOG.log', encoding='utf-8', level=logging.DEBUG)
+logging1 = logging.getLogger('MAIN')
+logging1.setLevel(logging.INFO)
+fh = logging.FileHandler('MAIN.log')
+fh.setLevel(logging.DEBUG)
+logging1.addHandler(fh)
+
+#logging.basicConfig(filename='MAIN_LOG.log', filemode='a', level=logging.DEBUG)
+logging1.info(".............................................")
+
+logging1.info("____!!!!!!!_____starting time____!!!!!!!_____: %s",datetime.now())
+logging1.info(".............................................")
+
+def supervisor(process_ids):
+    kill_signal = False
+    
+    process_name = "abh_gui"
+    for proc in psutil.process_iter():
+        if process_name in proc.name():
+           pid_coordinator = proc.pid
+           logging1.info("coordinator with name and pid:",process_name, pid_coordinator)
+        
+            
+            
+    while 1:
+        time.sleep(3)
+        try:
+            if psutil.pid_exists(pid_coordinator):
+                 logging1.info("coordinator ON ok")
+            else:
+                logging1.info("coordinator BROKEN -> kill all")
+                kill_signal = True
+        except:
+            logging1.warning("not found pid for coordinator, continue without it")
+            
+        for pid in process_ids:
+            if kill_signal == True:
+                process_ids.remove(pid)
+                p = psutil.Process(pid)
+                p.kill()  #or p.kill()
+                
+                #os.kill(pid, signal.SIGTERM) #funziona ma psutil lo vede stesso
+                logging1.critical("delated:",pid)
+                logging1.critical("is alive (should not):",pid,psutil.pid_exists(pid))
+            else:
+                if psutil.pid_exists(pid):
+                     logging1.debug("OK pid %d exists" % pid)
+                    #process = psutil.Process(pid)
+                else:
+                    logging1.critical(" pid %d does not exist" % pid)
+                    process_ids.remove(pid)
+                    kill_signal= True
+        if len(process_ids) == 0:
+            supervisor_pid = os.getpid()
+            logging1.critical("killstrike terminated-exiting supervisor...:",supervisor_pid)
+            os.kill (supervisor_pid, 0)
+            #print("is alive supervisor:",supervisor_pid,psutil.pid_exists(supervisor_pid))
+            break
+        
+                
+                
+        
+            
+            
+            
+            
+           
+
+
 
 
 def main():
@@ -25,6 +98,7 @@ def main():
         
         
         stage = ""
+        process_ids = []
 
         exercise_string = multiprocessing.Value("i", 0) #(id esercizio)
         ex_count = multiprocessing.Value("i", 0)
@@ -40,15 +114,16 @@ def main():
 
         # printing main program process id
         #### FASE DI CREAZIONE SOTTO-PROCESSI ####
-        print("################### PROCESSI ################")
-        print("MAIN         -> gestisce i sottoprocessi     ")
-        print("SKELETONIZER -> lancia lo skeletonizzatore   ")
-        print("EVALUATOR    -> valuta l'esercizio           ")
-        print("LISTENER     -> ascolta i comandi controllore")
-        print("#############################################")
+        logging1.info("################### PROCESSI ################")
+        logging1.info("MAIN         -> gestisce i sottoprocessi     ")
+        logging1.info("SKELETONIZER -> lancia lo skeletonizzatore   ")
+        logging1.info("EVALUATOR    -> valuta l'esercizio           ")
+        logging1.info("LISTENER     -> ascolta i comandi controllore")
+        logging1.info("SUPERVISOR   -> controlla i processi         ")
+        logging1.info("#############################################")
         # mostro a video l'ID del processo attivato corrispondente
         # al lancio dello script
-        print("ID of main process: {}".format(os.getpid()))
+        logging1.info("ID of main process: {}".format(os.getpid()))
         #A variant of Queue that retrieves most recently added entriesfirst(last in, firstout).
         # attendo 5 secondi per dare il tempo al resto del sistema di inizializzare tutto
         # correttamente e poterlo poi richiamare nella coda
@@ -74,7 +149,7 @@ def main():
         # con una virgola per fargli capire che e' un elemento e non n, cioe'
         # 'hello' deve essere interpretato come 1 elemento e non 5 ('h','e','l','l','o')
         p3 = multiprocessing.Process(target=receiver.listen_for_TCP_string, args=(string_from_tcp_ID,))
-
+        
 
   
      
@@ -85,12 +160,23 @@ def main():
         p1.start()
         p2.start()
         p3.start()
+        process_ids.append(os.getpid())
+        process_ids.append(p1.pid)
+        process_ids.append(p2.pid)
+        process_ids.append(p3.pid)
+        logging1.info("process appended: %s",process_ids)
+        
+        
+        p4 = multiprocessing.Process(target=supervisor, args=(process_ids,))
+        p4.start()
 
-
-        # stampo a video il process ID dei tre processi
-        print("ID of SKELETONIZER -> {}".format(p1.pid))
-        print("ID of EVALUATOR    -> {}".format(p2.pid))
-        print("ID of LISTENER     -> {}".format(p3.pid))
+        # stampo a video il process ID dei tre processi piu il padre
+        logging1.info("ID of main process: {}".format(os.getpid()))
+        logging1.info("ID of SKELETONIZER -> {}".format(p1.pid))
+        logging1.info("ID of EVALUATOR    -> {}".format(p2.pid))
+        logging1.info("ID of LISTENER     -> {}".format(p3.pid))
+        logging1.info("ID of SUPERVISOR     -> {}".format(p4.pid))
+        
 
         # controllo lo status dei processi "figli", questo e' necessario perche'
         # senza join() i processi p1, p2, p3 potrebbero terminare automaticamente
@@ -100,20 +186,22 @@ def main():
         p1.join()
         p2.join()
         p3.join()
+        p4.join()
 
         # both processes finished
-        print("Both processes finished execution!")
+        logging1.info("Both processes finished execution!")
 
         # check if processes are alive
         # controllo se sono ancora vivi o se sono terminati e ne printo lo status
-        print("SKELETONIZER is alive? -> {}".format(p1.is_alive()))
-        print("EVALUATOR is alive?    -> {}".format(p2.is_alive()))
-        print("LISTENER is alive?     -> {}".format(p3.is_alive()))
+        logging1.info("SKELETONIZER is alive? -> {}".format(p1.is_alive()))
+        logging1.info("EVALUATOR is alive?    -> {}".format(p2.is_alive()))
+        logging1.info("LISTENER is alive?     -> {}".format(p3.is_alive()))
+        logging1.info("SUPERVISOR is alive?     -> {}".format(p4.is_alive()))
         
         
     
 try:
     main()
 except KeyboardInterrupt:
-    print('Killed by user, exiting...')
+    logging1.warning('Killed by user, exiting...')
     sys.exit(0)

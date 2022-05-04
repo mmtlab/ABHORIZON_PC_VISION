@@ -16,9 +16,9 @@ def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        print(seg[0])
+        EVA.logging3.critical("::RECEIVER:: %s",seg[0])
         if struct.unpack("B", seg[0:1])[0] == 1:
-            print("finish emptying buffer")
+            EVA.logging3.critical("::RECEIVER::finish emptying buffer")
             break
 
 
@@ -32,7 +32,7 @@ def listen_for_TCP_string(string_from_tcp_ID):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     s.bind((ip, port))
-    print("reciving config: IP = {}, PORT = {}. ".format(ip, port))
+    EVA.logging3.critical("::RECEIVER::__reciving config: IP = {}, PORT = {}. ".format(ip, port))
 
     while True:
 
@@ -47,7 +47,7 @@ def listen_for_TCP_string(string_from_tcp_ID):
         
         seg = seg[:-1]
         
-        print("FROM TCP SEGB:",seg)
+        EVA.logging3.critical("::RECEIVER::__FROM TCP SEGB: %s",seg)
 
         if seg == "stop":
             string_from_tcp_ID.value = 0
@@ -63,7 +63,7 @@ def listen_for_TCP_string(string_from_tcp_ID):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    print("receiver listening")
+    EVA.logging3.critical("::RECEIVER::receiver listening")
 
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -72,7 +72,7 @@ def main():
     Raddr = '192.168.10.2'
     Rport = 21001
     s.bind((Raddr, Rport))
-    print("receiving config: IP = {}, PORT = {}. ".format(Raddr, Rport))
+    EVA.logging3.critical("::RECEIVER::receiving config: IP = {}, PORT = {}. ".format(Raddr, Rport))
 
     dump_buffer(s)
 

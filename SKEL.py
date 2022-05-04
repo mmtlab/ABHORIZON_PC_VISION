@@ -14,6 +14,7 @@ from datetime import datetime
 from numpy.linalg import norm
 import EVA
 import statistics
+import logging
 
 camera_index_secondary = 1
 camera_index_primary = 0
@@ -22,6 +23,17 @@ writing = False
 showing = False
 printing_FPS = False
 model = 1
+
+logging2 = logging.getLogger('SKEL')
+logging2.setLevel(logging.INFO)
+fh2 = logging.FileHandler('SKEL.log')
+fh2.setLevel(logging.DEBUG)
+logging2.addHandler(fh2)
+
+#logging.basicConfig(filename='SKEL_LOG.log', filemode='a', level=logging.DEBUG)
+logging2.info(".............................................")
+logging2.info("____!!!!!!!_____starting time____!!!!!!!_____: %s",datetime.now())
+logging2.info(".............................................")
 
 
 # camera_index_secondary = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_h_ex_1b.avi"
@@ -113,16 +125,19 @@ def returnCameraIndexes():
     i = 10
     while i > 0:
         # print("retry cap : ", index)
-        cap = cv2.VideoCapture(index)
+        try:
+            cap = cv2.VideoCapture(index)
+        except:
+            logging2.warning("camera index %s not aviable",index)
         # print("cap status :" ,cap.isOpened())
 
         if cap.isOpened():
-            print("is open! index =", index)
+            logging2.info("is open! index = %s", index)
             arr.append(index)
             cap.release()
         index += 1
         i -= 1
-    print(arr)
+    logging2.info(arr)
     return arr
 
 
@@ -144,7 +159,7 @@ class Undistorter:
     def undistortOPT(self, img):
 
         if self.cachedM1 is None or self.cachedM2 is None:
-            print("calculating map1 and map 2")
+            logging2.info("calculating map1 and map 2")
             # calc map1,map2
             DIM = (640, 480)
 
@@ -159,16 +174,16 @@ class Undistorter:
             '''
             h, w = img.shape[:2]
             map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-            print("DONE! completed map1 and 2, dim = ", map1.shape, map2.shape)
+            logging2.info("DONE! completed map1 and 2, dim =")
 
             if map1 is None or map2 is None:
-                print("ERROR no map calculated")
+                logging2.error("ERROR no map calculated")
                 return None
 
             # cache the homography matrix
             self.cachedM1 = map1
             self.cachedM2 = map2
-            print("saved map1 and 2")
+            logging2.info("saved map1 and 2")
 
             # print("DONE! completed map1 and 2, dim = ", (self.cachedM1).shape, (self.cachedM2).shape)
 
@@ -179,7 +194,7 @@ class Undistorter:
     def undistortOPT180(self, img):
 
         if self.cachedM1180 is None or self.cachedM2180 is None:
-            print("calculating m1, m2 180")
+            logging2.info("calculating m1, m2 180")
 
             K = np.array([[256.08951474686006, 0.0, 338.0670093090018], [0.0, 256.106658840997, 249.32266973335038],
                           [0.0, 0.0, 1.0]])
@@ -191,16 +206,16 @@ class Undistorter:
 
             h, w = img.shape[:2]
             map1180, map2180 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-            print("DONE! completed map1 and 2, dim = ", map1180.shape, map2180.shape)
+            logging2.info("DONE! completed map1 and 2, dim = %s", map1180.shape, map2180.shape)
 
             if map1180 is None or map2180 is None:
-                print("ERROR no map calculated")
+                logging2.error("ERROR no map calculated")
                 return None
 
             # cache the homography matrix
             self.cachedM1180 = map1180
             self.cachedM2180 = map2180
-            print("saved map1 and 2 180")
+            logging2.info("saved map1 and 2 180")
 
             # print("DONE! completed map1 and 2, dim = ", (self.cachedM1).shape, (self.cachedM2).shape)
 
@@ -251,7 +266,7 @@ def rendering_kp_on_frame(joints,kp,img):
     overlay = img.copy()
     alpha = 0.3
     if not joints:
-        print("no exercise // no rendering")
+        logging2.critical("no exercise // no rendering")
         return img
     else:
 
@@ -356,19 +371,19 @@ def skeletonizer(KP_global, EX_global, q):
     
     # corpo del codice con ini camere e rete neurale
     # printing process id
-    print("ID of process running worker1: {}".format(os.getpid()))
+    logging2.info("ID of process running worker1: {}".format(os.getpid()))
     dictionary = {}
     ID = 0
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 5000
     fs = sender.FrameSegment(s, port)
     # stitcher serve per fondere due immagini da due camere
-    print("try creating undistorter...")
+    logging2.info("try creating undistorter...")
     undistorter = Undistorter()
     camera_index = returnCameraIndexes()
-    print("length camera index : ", len(camera_index))
+    logging2.info("length camera index : %s", len(camera_index))
     if len(camera_index) == 2:
-        print("2 camera system")
+        logging2.info("2 camera system")
 
         cap = cv2.VideoCapture(camera_index[camera_index_primary])
         cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
@@ -378,22 +393,21 @@ def skeletonizer(KP_global, EX_global, q):
 
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
-        print(frame_width2, frame_height2)
+        logging2.info("frame dimension: {}".format(frame_width2, frame_height2))
 
         frame_width1 = int(cap1.get(3))
         frame_height1 = int(cap1.get(4))
 
     elif len(camera_index) == 1:
-        print("1 camera system")
+        logging2.info("1 camera system")
         cap = cv2.VideoCapture(camera_index[0])
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
-        print(frame_width2, frame_height2)
-
+        logging2.info("frame dimension: {}".format(frame_width2, frame_height2))
 
 
     else:
-        print("not enough camera aviable: camera numer = ", len(camera_index))
+        logging2.error("not enough camera aviable: camera numer = %s", len(camera_index))
         return 0
     if recording == True:
         out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 30,
@@ -410,21 +424,21 @@ def skeletonizer(KP_global, EX_global, q):
 
     mp_drawing = mp.solutions.drawing_utils
     mp_pose = mp.solutions.pose
-    print("start pose config")
+    logging2.info("start pose config")
     with mp_pose.Pose(
             static_image_mode=False,  # false for prediction
             model_complexity=model,
             smooth_landmarks=True,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.6) as pose:
-        print("start loop")
+        logging2.info("start loop")
 
         if len(camera_index) == 2:
-            print("is cap0 opened ?: ", cap.isOpened())
-            print("is cap1 opened ?: ", cap1.isOpened())
+            logging2.info("is cap0 opened ?:%s ", cap.isOpened())
+            logging2.info("is cap1 opened ?:%s ", cap1.isOpened())
 
         elif len(camera_index) == 1:
-            print("is cap0 opened ?: ", cap.isOpened())
+            logging2.info("is cap0 opened ?:%s ", cap.isOpened())
 
         while cap.isOpened():
 
@@ -437,7 +451,7 @@ def skeletonizer(KP_global, EX_global, q):
                 else:
                     ex_string = read_shared_mem_for_ex_string(EX_global.value)
                     dictionary = EVA.ex_string_to_config_param(ex_string)
-                    print("creating dict:",dictionary)
+                    logging2.info("creating dict: %s",dictionary)
                     ID = dictionary["ID"]
                     continue
 
@@ -487,12 +501,12 @@ def skeletonizer(KP_global, EX_global, q):
             # image1=undistort(image1)
 
             if not success:
-                print("Ignoring empty camera0 frame.")
+                logging2.error("Ignoring empty camera0 frame.")
                 # If loading a video, use 'break' instead of 'continue'.
                 return False
             if len(camera_index) == 2:
                 if not success:
-                    print("Ignoring empty camera2 frame.")
+                    logging2.error("Ignoring empty camera2 frame.")
                     return False
                     # image = cv2.rotate(image,cv2.ROTATE_180)
             # image1 = cv2.rotate(image1,cv2.ROTATE_180)
@@ -543,7 +557,7 @@ def skeletonizer(KP_global, EX_global, q):
             sti = cv2.flip(sti, 1)
 
             if sti is None:
-                print("image null")
+                logging2.error("image null")
                 break
 
             # cv2.imshow('MediaPipeconc', conc)
@@ -602,7 +616,7 @@ def skeletonizer(KP_global, EX_global, q):
                     # print("kp : ",kp)
 
                     if q.full():
-                        print("impossible to insert data in full queue")
+                        logging2.error("impossible to insert data in full queue")
                     else:
 
                         q.put(kp)
@@ -613,7 +627,7 @@ def skeletonizer(KP_global, EX_global, q):
                     sti = rendering_kp_on_frame(dictionary["segments_to_render"],kp,sti)
                     #KP_renderer_on_frame(ex_string, kp, sti)
                 else:
-                    print("results is none: ", results.pose_landmarks)
+                    logging2.debug("results is none:%s ", results.pose_landmarks)
 
             # invio streaming
             fs.udp_frame(sti)
@@ -632,7 +646,7 @@ def skeletonizer(KP_global, EX_global, q):
                     end = time.time()
                     seconds = end - start
                     fps = 1 / seconds
-                    print("FPS:", fps, seconds)
+                    logging2.info("FPS: %s", fps, seconds)
         cap.release()
         cap1.release()
 
