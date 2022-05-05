@@ -17,7 +17,7 @@ import psutil
 #logging.basicConfig(filename='MAIN_LOG.log', encoding='utf-8', level=logging.DEBUG)
 logging1 = logging.getLogger('MAIN')
 logging1.setLevel(logging.INFO)
-fh = logging.FileHandler('MAIN.log')
+fh = logging.FileHandler('./log/MAIN.log')
 fh.setLevel(logging.DEBUG)
 logging1.addHandler(fh)
 
@@ -56,8 +56,8 @@ def supervisor(process_ids):
                 p.kill()  #or p.kill()
                 
                 #os.kill(pid, signal.SIGTERM) #funziona ma psutil lo vede stesso
-                logging1.critical("delated:",pid)
-                logging1.critical("is alive (should not):",pid,psutil.pid_exists(pid))
+                logging1.critical("delated: %s",pid)
+                logging1.critical("is alive (should not):%s",pid,psutil.pid_exists(pid))
             else:
                 if psutil.pid_exists(pid):
                      logging1.debug("OK pid %d exists" % pid)

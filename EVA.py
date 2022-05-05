@@ -14,12 +14,12 @@ import csv
 import logging
 
 
-HISTERESYS = 0.2
+
 data_collection=True
 default_cooldown = 60
 logging3 = logging.getLogger('EVA')
-logging3.setLevel(logging.DEBUG)
-fh3 = logging.FileHandler('EVA.log')
+logging3.setLevel(logging.INFO)
+fh3 = logging.FileHandler('./log/EVA.log')
 fh3.setLevel(logging.DEBUG)
 logging3.addHandler(fh3)
 logging3.info(".............................................")
@@ -68,7 +68,7 @@ def default_dictionary_control(parameter,descriptor):
     return parameter
 
 
-def write_data_csv(data):
+def write_data_csv(exercise,time,data):
     """
     write data 2 CSV
 
@@ -76,11 +76,17 @@ def write_data_csv(data):
 
     :return: nothing
     """
-
-    f = open('data.csv', 'a')
+    #print("filename_execution")
+    filename = "./data/" + exercise + "_" + time.strftime("%m-%d-%Y_%H:%M:%S") +".csv"
+    #print("filename:",filename)
+    f = open(filename, 'a')
     writer = csv.writer(f)
 
+
     writer.writerow(data)
+    f.close()
+
+
 
 
 def joint_distance_calculator(kps_to_render, kp):
@@ -333,7 +339,13 @@ def ex_string_to_config_param(ex_string):
                 logging3.warning("missing line of config, switch to default threshold_count")
                 threshold_count = config.get("default", 'threshold_count')
             threshold_count = int(default_dictionary_control(threshold_count, 'threshold_count'))
-
+       
+            try:
+                HISTERESYS = config.get(exercise, 'histeresys')
+            except:
+                logging3.warning("missing line of config, switch to default histeresys")
+                HISTERESYS = config.get("default", 'histeresys')
+            HISTERESYS = (int(default_dictionary_control(HISTERESYS, 'histeresys')))/100
             # print("joints and target : ", joints_target)
 
             dictionary = {
@@ -345,7 +357,8 @@ def ex_string_to_config_param(ex_string):
                 "target_bar": target_bar,
                 "threshold": threshold,
                 "motor_history_events": motor_history_events,
-                "threshold_count": threshold_count
+                "threshold_count": threshold_count,
+                "histeresys": HISTERESYS
 
             }
             # print("dictionary : {}".format(dictionary))
@@ -493,6 +506,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
     STORY = dictionary["motor_history_events"]
     joints_with_ropes = dictionary["joints_with_ropes"]
     target_bar = dictionary["target_bar"]
+    HISTERESYS = dictionary["histeresys"]
     printV = False
 
     if len(kp_history) > STORY - 1:
@@ -784,6 +798,11 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     eval_data = [0, 0, 0, 0]
     stage_v2 = [0, 0]
     
+    #param for save data in csv
+    time_csv = ""
+    exercise_csv = ""
+    inizialize_csv_file = False
+    
     #variable for story of stg
     retro_filter_state = ["neutral","neutral"]
     
@@ -839,6 +858,11 @@ def evaluator(EX_global, q, string_from_tcp_ID):
             stage_angle = ["", ""]
             stage = ["", ""]
             
+            #stop reset the inizialization state of the csv data file  
+            time_csv = ""
+            exercise_csv = ""
+            inizialize_csv_file = False
+            
             #conteggio totale
             compared_count = 0
 
@@ -862,7 +886,15 @@ def evaluator(EX_global, q, string_from_tcp_ID):
             if EX_global.value != 0:
                 # ______ASSEGNO LA ex_string per l inizio della valutazione
                 ex_string = check_for_string_in_memory(EX_global.value)
-                # print("an exercise is under evaluation, starting...", ex_string)
+                if data_collection == True:
+                    if inizialize_csv_file == False:
+                        time_csv = datetime.now()
+                        exercise_csv = ex_string
+                        header = ["count","D2_r","D2_l","V_r","V_l","A_r","A_l","VA_r","VA_l", "retro_param"]
+                        write_data_csv(exercise_csv,time_csv,header)
+                        inizialize_csv_file = True
+                        logging3.debug("exercise string and time saved for csv writing")
+                    # print("an exercise is under evaluation, starting...", ex_string)
                 # print("count = {}".format(count))
 
             else:
@@ -936,8 +968,11 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                     
             
                 if data_collection == True:
-                    data = ["count:",compared_count,"d_m, vel:",eval_data,"a_m, vel",eval_data_angle,"retroact_ param",stg]
-                    writeCSVdata(data)
+                    #print(exercise_csv,time_csv)
+                    if exercise_csv != "" and time_csv != "":
+                    
+                        data = [compared_count,eval_data[0],eval_data[1],eval_data[2],eval_data[3], eval_data_angle[0],eval_data_angle[1],eval_data_angle[2],eval_data_angle[3], stg]
+                        write_data_csv(exercise_csv,time_csv,data)
                 ##packet = str(max(count)) + "," + str(int(max(per)))
                 # packet = str(max(count_v2)) + "," + str(int(stg))
                 # packet = [float(count_v2[0]),float(stg)]

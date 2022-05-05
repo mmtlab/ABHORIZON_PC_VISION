@@ -19,14 +19,16 @@ import logging
 camera_index_secondary = 1
 camera_index_primary = 0
 recording = False
-writing = False
+writing = True
 showing = False
 printing_FPS = False
+real_time_camera = True
 model = 1
+
 
 logging2 = logging.getLogger('SKEL')
 logging2.setLevel(logging.INFO)
-fh2 = logging.FileHandler('SKEL.log')
+fh2 = logging.FileHandler('./log/SKEL.log')
 fh2.setLevel(logging.DEBUG)
 logging2.addHandler(fh2)
 
@@ -37,6 +39,27 @@ logging2.info(".............................................")
 
 
 # camera_index_secondary = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_h_ex_1b.avi"
+
+
+def write_data_csv(exercise,time,data):
+    """
+    write data 2 CSV
+
+    :param data: write to a csv file input data (append to the end)
+
+    :return: nothing
+    """
+    #print("filename_execution")
+    filename = "./data/SKELETON_" + exercise + "_" + time.strftime("%m-%d-%Y_%H:%M:%S") +".csv"
+    #print("filename:",filename)
+    f = open(filename, 'a')
+    writer = csv.writer(f)
+
+
+    writer.writerow(data)
+    f.close()
+
+
 
 
 def brightness(img):
@@ -369,6 +392,17 @@ def skeletonizer(KP_global, EX_global, q):
     :return: nothing
     """
     
+    header_csv = []
+    for nkp in range(13):
+        header_csv.append("x"+ str(nkp))
+        header_csv.append("y"+ str(nkp))
+    print(header_csv)
+        
+        
+    inizialized_csv_file = False
+    exercise_csv = ""
+    time_csv = ""
+    
     # corpo del codice con ini camere e rete neurale
     # printing process id
     logging2.info("ID of process running worker1: {}".format(os.getpid()))
@@ -386,10 +420,11 @@ def skeletonizer(KP_global, EX_global, q):
         logging2.info("2 camera system")
 
         cap = cv2.VideoCapture(camera_index[camera_index_primary])
-        cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
-
-        #path = "/home/abhorizon/ABHORIZON_PC_VISION/data/video_subject_z_ex_1.avi"
-        #cap1 = cv2.VideoCapture(path)
+        if real_time_camera == True:
+            cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+        else:
+            path = "/home/abhorizon/ABHORIZON_PC_VISION/data/old_test/video_subject_z_ex_1.avi"
+            cap1 = cv2.VideoCapture(path)
 
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
@@ -471,11 +506,13 @@ def skeletonizer(KP_global, EX_global, q):
                     success, image = cap1.read()  #capture low camera
                     if ID < 80:
                         logging2.info("correction of distortion")
-                        image = undistorter.undistortOPT180(image) #correct distortion
+                        if real_time_camera == True:
+                            image = undistorter.undistortOPT180(image) #correct distortion
                         pass
-                    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-                    image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
-                    #print("___________co0rrs")
+                    if real_time_camera == True:
+                        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+                        image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
+                        #print("___________co0rrs")
 
                 else:
                     success, image = cap.read()
@@ -492,14 +529,6 @@ def skeletonizer(KP_global, EX_global, q):
 
             # image = image[180:frame_width1, 70:frame_height1-70]
 
-            # image=undistort(image)
-            # image1=undistort(image1)
-            # image1 = cv2.rotate(image1,cv2.ROTATE_180)
-            # image1 = cv2.rotate(image1,cv2.ROTATE_90_COUNTERCLOCKWISE)
-            # image = cv2.rotate(image,cv2.ROTATE_90_COUNTERCLOCKWISE)
-            # cv2.putText(image, 'img 1', (300, 200), cv2.FONT_HERSHEY_COMPLEX, 3, (255,0,255), 3)
-            # cv2.putText(image1, 'img 2', (300, 200), cv2.FONT_HERSHEY_COMPLEX, 3, (255,0,255), 3)
-            # image1=undistort(image1)
 
             if not success:
                 logging2.error("Ignoring empty camera0 frame.")
@@ -519,35 +548,15 @@ def skeletonizer(KP_global, EX_global, q):
             #sti = stitcher.stitch((image,image1))
 
             '''
-            # correzione fisheye necessita calibrazione
-            # image=undistort(image)
-            # image1=undistort(image1)
-            # print("undistorted")
-
-            # 2camere smontate____
-            # sti = np.concatenate((image,image1), axis= 1)
-            # 2camere montate stitcher___
-            # print("calling stitcher function...")
+          
             if len(camera_index) == 2:
-                # sti = cv_stitcher(image,image1)
-                # cv2.imwrite("sti.jpg",sti)
-                # break
-                # sti = np.concatenate((image,image1), axis= 1)
-                # sti = align_image_panorama(image, image1)
+                
                 sti = image
-                # sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
-
-                # sti = stitcher.stitch([image, image1])
-                # sti = np.concatenate((image,image1[0:frame_width1, 0:frame_height1]), axis= 1)
-                # sti, postM, h  = alignImages(image,image1,250,0.5)
-                # monocamera___
-                # sti = image
-
+               
             else:
                 sti = image
                 # sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
 
-            # sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
             alpha = 4
             beta = 12
             # sti = cv2.convertScaleAbs(sti, alpha=5, beta=2)
@@ -568,13 +577,7 @@ def skeletonizer(KP_global, EX_global, q):
             # render in front of ex_string
 
             if ex_string != "":
-                # print("checker : EX:<{}> ".format(ex_string))
-                # sti = np.concatenate((image,image1[550:720, 0:480]), axis= 0)
-
-                # sti = cv2.cvtColor(sti, cv2.COLOR_BGR2RGB)
-                # print("sti creted")
-
-                # To improve performance, optionally mark the image as not writeable to
+                            # To improve performance, optionally mark the image as not writeable to
                 # pass by reference.
                 if recording == True:
                     out.write(sti)
@@ -607,13 +610,21 @@ def skeletonizer(KP_global, EX_global, q):
                 if results.pose_landmarks is not None:
                     #svuoto queue
                     #scrivo su csv
-                    if writing == True:
-                        writeCSVdata(ID, results.pose_landmarks)
+                    
                     # print("rendering...")
                     while not q.empty():
                         bit = q.get()
 
                     kp = landmarks2KP(results.pose_landmarks, sti)
+                    if writing == True:
+                        if inizialized_csv_file == False:
+                            exercise_csv = ex_string
+                            time_csv = datetime.now()
+                            write_data_csv(exercise_csv,time_csv,header_csv)
+                            inizialized_csv_file = True
+                        else:
+                            write_data_csv(exercise_csv,time_csv,kp)
+                        
                     # print("kp : ",kp)
 
                     if q.full():
@@ -621,6 +632,7 @@ def skeletonizer(KP_global, EX_global, q):
                     else:
 
                         q.put(kp)
+                    
 
                     # print(KP_global)
 
