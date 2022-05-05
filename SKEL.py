@@ -470,6 +470,7 @@ def skeletonizer(KP_global, EX_global, q):
                 if ID >= 50 and ID <= 99:
                     success, image = cap1.read()  #capture low camera
                     if ID < 80:
+                        logging2.info("correction of distortion")
                         image = undistorter.undistortOPT180(image) #correct distortion
                         pass
                     image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)

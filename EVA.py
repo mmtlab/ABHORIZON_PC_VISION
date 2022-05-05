@@ -14,7 +14,7 @@ import csv
 import logging
 
 
-
+HISTERESYS = 0.2
 data_collection=True
 default_cooldown = 60
 logging3 = logging.getLogger('EVA')
@@ -528,8 +528,12 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
 
             old_value.append(V_p)
             # print("CHNNNDNT:",  hand)
-
-            if Vx >= threshold:
+            if retro_filter_state[hand] == "retro":
+                histeresys = HISTERESYS*threshold
+            else:
+                histeresys = 0
+                
+            if Vx >= threshold +histeresys :
                 if retro_filter_state[hand] != "retro":
                     phase[hand] = 1
                     retro_filter_state[hand] = "traction"
@@ -539,11 +543,11 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
                     logging3.debug("new traction smoothed in neutral")
                 if Vx >= threshold_count:
                     stage[hand] = "load"
-            elif Vx < threshold and Vx > -threshold:
-                # stage[hand] = "pause"
+            elif Vx < threshold +histeresys and Vx > -threshold +histeresys:
+                # stage[hand]  = "pause"
                 phase[hand] = 0
                 retro_filter_state[hand] = "neutral"
-            elif Vx <= -threshold:
+            elif Vx <= -threshold +histeresys:
                 if retro_filter_state[hand] != "traction":
                     phase[hand] = -1
                     retro_filter_state[hand] = "retro"
@@ -932,7 +936,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                     
             
                 if data_collection == True:
-                    data = ["d_media e velocità",eval_data,"alpha_medio e velocità",eval_data_angle,"retroact_ param",stg]
+                    data = ["count:",compared_count,"d_m, vel:",eval_data,"a_m, vel",eval_data_angle,"retroact_ param",stg]
                     writeCSVdata(data)
                 ##packet = str(max(count)) + "," + str(int(max(per)))
                 # packet = str(max(count_v2)) + "," + str(int(stg))

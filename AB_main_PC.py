@@ -39,7 +39,7 @@ def supervisor(process_ids):
             
             
     while 1:
-        time.sleep(3)
+        time.sleep(1)
         try:
             if psutil.pid_exists(pid_coordinator):
                  logging1.info("coordinator ON ok")
@@ -203,5 +203,5 @@ def main():
 try:
     main()
 except KeyboardInterrupt:
-    logging1.warning('Killed by user, exiting...')
+    logging1.warning('Killed by user, exiting...(KeyboardInterrupt)')
     sys.exit(0)
