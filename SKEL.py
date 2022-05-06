@@ -43,9 +43,11 @@ logging2.info(".............................................")
 
 def write_data_csv(exercise,time,data):
     """
-    write data 2 CSV
+    write data 2 CSV,auto start and close when an exercise is done
 
-    :param data: write to a csv file input data (append to the end)
+    :param exercise: the name of the exercise for the title formatting
+    :param time: timestamp of the start point of the excercise for the title of the excercise
+    :param data: write to a csv file input data (the keypoints 13 of the body)
 
     :return: nothing
     """
@@ -111,7 +113,7 @@ def ex_string_to_ID(ex_string):
 
 def writeCSVdata(ID, landmarks):
     """
-    write data 2 CSV
+    write data 2 CSV, 
 
     :param data: write to a csv file input data (append to the end)
 
@@ -391,20 +393,21 @@ def skeletonizer(KP_global, EX_global, q):
 
     :return: nothing
     """
-    
+    #header csv file generation
     header_csv = []
     for nkp in range(13):
         header_csv.append("x"+ str(nkp))
         header_csv.append("y"+ str(nkp))
     print(header_csv)
         
-        
+    #flag for file csv generation
     inizialized_csv_file = False
     exercise_csv = ""
     time_csv = ""
     
     # corpo del codice con ini camere e rete neurale
     # printing process id
+    #inizializing parameters for the exercise and com
     logging2.info("ID of process running worker1: {}".format(os.getpid()))
     dictionary = {}
     ID = 0
@@ -422,9 +425,16 @@ def skeletonizer(KP_global, EX_global, q):
         cap = cv2.VideoCapture(camera_index[camera_index_primary])
         if real_time_camera == True:
             cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+            logging2.info("low camera as evaluation sensor")
         else:
-            path = "/home/abhorizon/ABHORIZON_PC_VISION/data/old_test/video_subject_z_ex_1.avi"
-            cap1 = cv2.VideoCapture(path)
+            try:
+                path = "/home/abhorizon/ABHORIZON_PC_VISION/data/old_test/video_subject_z_ex_1.avi"
+                cap1 = cv2.VideoCapture(path)
+                logging2.info("video for offline evaluation : %s",path)
+            except:
+                logging2.error("video file not valid or not present in path: %s",path)
+
+                    
 
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
@@ -476,8 +486,8 @@ def skeletonizer(KP_global, EX_global, q):
             logging2.info("is cap0 opened ?:%s ", cap.isOpened())
 
         while cap.isOpened():
-
-            start = time.time()
+            if printing_FPS == True:
+                start = time.time()
            
             if EX_global.value != 0:
                 if bool(dictionary):
@@ -505,7 +515,7 @@ def skeletonizer(KP_global, EX_global, q):
                 if ID >= 50 and ID <= 99:
                     success, image = cap1.read()  #capture low camera
                     if ID < 80:
-                        logging2.info("correction of distortion")
+                        #logging2.info("correction of distortion")
                         if real_time_camera == True:
                             image = undistorter.undistortOPT180(image) #correct distortion
                         pass
@@ -575,8 +585,12 @@ def skeletonizer(KP_global, EX_global, q):
             # assert status == 0 # Verify returned status is 'success'
 
             # render in front of ex_string
+            if ex_string == "":
+                if inizialized_csv_file == True:
+                    inizialized_csv_file = False
+                    logging2.critical("no string in skel --> ergo stop signal from coordinator")
 
-            if ex_string != "":
+            else:
                             # To improve performance, optionally mark the image as not writeable to
                 # pass by reference.
                 if recording == True:
@@ -585,6 +599,9 @@ def skeletonizer(KP_global, EX_global, q):
                 # end1 = time.time()
                 # seconds1 = end1 - start
                 #
+                if printing_FPS == True:
+                    end_pre_proc = time.time()
+                    seconds_pre_proc = end_pre_proc - start
 
                 # start2 = time.time()
                 results = pose.process(sti)
@@ -593,6 +610,8 @@ def skeletonizer(KP_global, EX_global, q):
                 # print("p", results.pose_landmarks)
 
                 # start3 = time.time()
+                if printing_FPS == True:
+                    start_post_proc = time.time()
 
                 # Draw the pose annotation on the image.
                 sti.flags.writeable = True
@@ -658,8 +677,10 @@ def skeletonizer(KP_global, EX_global, q):
                 if printing_FPS == True:
                     end = time.time()
                     seconds = end - start
+                    second_post_proc = end - start_post_proc
                     fps = 1 / seconds
-                    logging2.info("FPS: %s", fps, seconds)
+                    pose_inference_time = seconds-(seconds_pre_proc+second_post_proc)
+                    logging2.info("FPS:{}, total:{},pose:{},preproc:{},postproc:{}".format( fps, round(seconds,4) ,round(pose_inference_time,4) ,round(seconds_pre_proc,4) ,round(second_post_proc,4) ))
         cap.release()
         cap1.release()
 

@@ -70,9 +70,11 @@ def default_dictionary_control(parameter,descriptor):
 
 def write_data_csv(exercise,time,data):
     """
-    write data 2 CSV
+    write data 2 CSV,auto start and close when an exercise is done
 
-    :param data: write to a csv file input data (append to the end)
+    :param exercise: the name of the exercise for the title formatting
+    :param time: timestamp of the start point of the excercise for the title of the excercise
+    :param data: write to a csv file input data (the evaluation data of the exercise)
 
     :return: nothing
     """
