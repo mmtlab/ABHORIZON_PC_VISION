@@ -42,33 +42,37 @@ def supervisor(process_ids):
         time.sleep(1)
         try:
             if psutil.pid_exists(pid_coordinator):
-                 logging1.info("coordinator ON ok")
+                 logging1.debug("coordinator ON ok")
             else:
-                logging1.info("coordinator BROKEN -> kill all")
+                logging1.error("coordinator // AB_GUI BROKEN -> kill all")
                 kill_signal = True
         except:
-            logging1.warning("not found pid for coordinator, continue without it")
+            logging1.error("not found pid for coordinator, continue without it")
             
         for pid in process_ids:
             if kill_signal == True:
+                logging1.error("process to clear: %s",process_ids)
                 process_ids.remove(pid)
                 p = psutil.Process(pid)
                 p.kill()  #or p.kill()
                 
                 #os.kill(pid, signal.SIGTERM) #funziona ma psutil lo vede stesso
-                logging1.critical("delated: %s",pid)
-                logging1.critical("is alive (should not):%s",pid,psutil.pid_exists(pid))
+                logging1.error("delated process: %s",pid)
+                logging1.error("is alive (should not):%s",pid,psutil.pid_exists(pid))
             else:
                 if psutil.pid_exists(pid):
                      logging1.debug("OK pid %d exists" % pid)
                     #process = psutil.Process(pid)
                 else:
-                    logging1.critical(" pid %d does not exist" % pid)
+                    logging1.error(" pid %d does not exist ERROR!" % pid)
                     process_ids.remove(pid)
                     kill_signal= True
+        
         if len(process_ids) == 0:
+            logging1.info("only supervisor is alive")
             supervisor_pid = os.getpid()
-            logging1.critical("killstrike terminated-exiting supervisor...:",supervisor_pid)
+            logging1.error("killstrike terminated-exiting supervisor...:",supervisor_pid)
+            
             os.kill (supervisor_pid, 0)
             #print("is alive supervisor:",supervisor_pid,psutil.pid_exists(supervisor_pid))
             break
@@ -169,6 +173,7 @@ def main():
         
         p4 = multiprocessing.Process(target=supervisor, args=(process_ids,))
         p4.start()
+        logging1.info("supervisor started:%s",p4.pid)
 
         # stampo a video il process ID dei tre processi piu il padre
         logging1.info("ID of main process: {}".format(os.getpid()))
