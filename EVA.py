@@ -391,6 +391,7 @@ def wait_for_keypoints(queuekp):
     """
     # loop 4 waiting the queue of KP from mediapipe
     keypoints = []
+    presence = False
 
     while not keypoints:
 
@@ -398,14 +399,20 @@ def wait_for_keypoints(queuekp):
             keypoints = queuekp.get(False)
         except queue.Empty:
             # print("no KP data aviable: queue empty")
+            presence = False
+            #trigger of missing image and kp
+            #print("q empty")
             pass
 
         else:
 
             if not keypoints:
-                logging3.error("no valid kp")
+                presence = False
+                #print("not kp")
+                #logging3.error("no valid kp")
             else:
-                return keypoints
+                presence = True
+                return keypoints, presence
 
 
 def check_for_string_in_memory(multiprocessing_value_slot):
@@ -922,7 +929,8 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 else:
                     config_param_dictionary = ex_string_to_config_param(ex_string)
 
-                kp = wait_for_keypoints(q)
+                kp, presence = wait_for_keypoints(q)
+                #print("people is presence?:",presence)
                 kp_story.append(kp)
                 STORY = config_param_dictionary["motor_history_events"]
                 while (len(kp_story) > STORY):

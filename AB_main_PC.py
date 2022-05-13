@@ -39,15 +39,17 @@ def supervisor(process_ids):
             
             
     while 1:
-        time.sleep(1)
-        try:
-            if psutil.pid_exists(pid_coordinator):
-                 logging1.debug("coordinator ON ok")
-            else:
-                logging1.error("coordinator // AB_GUI BROKEN -> kill all")
-                kill_signal = True
-        except:
-            logging1.error("not found pid for coordinator, continue without it")
+        time.sleep(0.2)
+        if kill_signal == False:
+        
+            try:
+                if psutil.pid_exists(pid_coordinator):
+                     logging1.debug("coordinator ON ok")
+                else:
+                    logging1.error("coordinator // AB_GUI BROKEN -> kill all, time: %s",datetime.now())
+                    kill_signal = True
+            except:
+                logging1.error("not found pid for coordinator, continue without it")
             
         for pid in process_ids:
             if kill_signal == True:
@@ -69,9 +71,9 @@ def supervisor(process_ids):
                     kill_signal= True
         
         if len(process_ids) == 0:
-            logging1.info("only supervisor is alive")
+            logging1.info("only supervisor is alive, time: %s",datetime.now())
             supervisor_pid = os.getpid()
-            logging1.error("killstrike terminated-exiting supervisor...:",supervisor_pid)
+            logging1.info("killstrike terminated-exiting supervisor...:%s",supervisor_pid)
             
             os.kill (supervisor_pid, 0)
             #print("is alive supervisor:",supervisor_pid,psutil.pid_exists(supervisor_pid))
@@ -208,5 +210,5 @@ def main():
 try:
     main()
 except KeyboardInterrupt:
-    logging1.warning('Killed by user, exiting...(KeyboardInterrupt)')
+    logging1.warning('AB_main_PC Killed by user, exiting...(KeyboardInterrupt)')
     sys.exit(0)
