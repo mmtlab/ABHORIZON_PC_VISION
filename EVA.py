@@ -555,7 +555,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
                 histeresys = HISTERESYS*threshold
             else:
                 histeresys = 0
-                
+            '''    
             if Vx >= threshold +histeresys :
                 if retro_filter_state[hand] != "retro":
                     phase[hand] = 1
@@ -584,9 +584,56 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
                         to_count[hand] = True
 
                         stage[hand] = "release"
+            '''
+            #retroaction
+
+            if Vx >= threshold + histeresys:
+                if retro_filter_state[hand] != "retro":
+                    phase[hand] = 1
+                    retro_filter_state[hand] = "traction"
+                else:
+                    phase[hand] = 0
+                    retro_filter_state[hand] = "neutral"
+                    logging3.debug("new traction smoothed in neutral")
+            elif Vx < threshold + histeresys and Vx > -threshold + histeresys:
+                    # stage[hand]  = "pause"
+                    phase[hand] = 0
+                    retro_filter_state[hand] = "neutral"
+            elif Vx <= -threshold + histeresys:
+                if retro_filter_state[hand] != "traction":
+                    phase[hand] = -1
+                    retro_filter_state[hand] = "retro"
+                else:
+                    phase[hand] = 0
+                    logging3.debug("new retro smoothed in neutral")
+                    retro_filter_state[hand] = "neutral"
+
+            #counting
+
+            if Vx >= threshold_count:
+                stage[hand] = "load"
+
+            elif Vx <= -threshold_count:
+                if stage[hand] == "load":
+                    # count[hand] +=1
+                    print("to release")
+                    stage[hand] = "release"
+            elif Vx <= threshold_count/2 and Vx >= -threshold_count/2:
+                if stage[hand] == "release":
+                    print("to count...")
+                    # count[hand] +=1
+                    to_count[hand] = True
+                    stage[hand] = "terminated_count"
+
+
+
+
+
+
+
                         # print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
         #print("eval", eval_data[0])
-
+        #print('stages:', stage, eval_data)
         if stage[0] == stage[1]:
 
             if to_count[0] == True or to_count[1] == True:
@@ -594,7 +641,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
                 count[1] = 1
 
                
-                #print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
+                print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
 
         # print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
 
@@ -671,7 +718,7 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
 
             old_value.append(V_p)
             # print("CHNNNDNT:",  hand)
-        
+            ''' retroazione + cnteggio angolare 
             if threshold > 0:
                 if Vx >= threshold:
                     phase[hand] = 1
@@ -707,9 +754,37 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
 
                             stage[hand] = "release"
                             
-                            
-                        
-                        
+            '''
+            #solo conteggio
+            #threshold positiva
+            if threshold_count > 0:
+                if Vx >= threshold_count:
+                    stage[hand] = "load"
+
+                elif Vx < threshold_count/2 and Vx > -threshold_count/2:
+                    if stage[hand] == "release":
+                        to_count[hand] = True
+
+                        stage[hand] = "terminated_count"
+                elif Vx <= -threshold_count:
+
+                    if stage[hand] == "load":
+                        stage[hand] = "release"
+            #threshold negativa
+            else:
+                if Vx <= threshold_count:
+                    stage[hand] = "load"
+
+                elif Vx > threshold_count/2 and Vx < -threshold_count/2:
+                    if stage[hand] == "release":
+                        to_count[hand] = True
+
+                        stage[hand] = "terminated_count"
+                elif Vx >= -threshold_count:
+
+                    if stage[hand] == "load":
+                        stage[hand] = "release"
+
         
                 
                         # print("O-O-O-LD__!!! : ",-threshold, stage[hand], old_value)
@@ -987,6 +1062,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 # packet = str(max(count_v2)) + "," + str(int(stg))
                 # packet = [float(count_v2[0]),float(stg)]
                 # packet = [0,0]
+                #print(stg)
 
                 logging3.debug("act: %s", stg)
                 # print("stg is : ", stage_v2)
