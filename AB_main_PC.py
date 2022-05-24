@@ -39,7 +39,7 @@ def supervisor(process_ids):
             
             
     while 1:
-        time.sleep(0.2)
+        time.sleep(0.1)
         if kill_signal == False:
         
             try:
@@ -133,7 +133,7 @@ def main():
         #A variant of Queue that retrieves most recently added entriesfirst(last in, firstout).
         # attendo 5 secondi per dare il tempo al resto del sistema di inizializzare tutto
         # correttamente e poterlo poi richiamare nella coda
-        time.sleep(0.2)
+        # time.sleep(0.1)
         # estraggo dalla coda dei multiprocessi un solo processo, quello
         # aggiunto piu' di recente (last in, first out)
         q = multiprocessing.Queue(maxsize=1)

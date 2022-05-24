@@ -493,7 +493,6 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
     compute distance from specific  joints of the ex and the compatible target,
     calculate it's velocity over a moving avarege of the distances and
     interpret the stage of th movement based on the sign of the velocity
-
     :param eval_data: last distance and velocity of the joint target points
     :param kp_history: last n (10) set of keypoint in the past
     :param count: current count of the ex repetitions (permanent in memory)
@@ -582,7 +581,6 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
                     if stage[hand] == "load":
                         # count[hand] +=1
                         to_count[hand] = True
-
                         stage[hand] = "release"
             '''
             #retroaction
@@ -656,7 +654,6 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
     compute distance from specific  joints of the ex and the compatible target,
     calculate it's velocity over a moving avarege of the distances and
     interpret the stage of th movement based on the sign of the velocity
-
     :param eval_data: last distance and velocity of the joint target points
     :param kp_history: last n (10) set of keypoint in the past
     :param count: current count of the ex repetitions (permanent in memory)
@@ -734,7 +731,6 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
                         if stage[hand] == "load":
                             # count[hand] +=1
                             to_count[hand] = True
-
                             stage[hand] = "release"
             else:
                 if Vx <= threshold:
@@ -751,7 +747,6 @@ def velocity_tracker_angle(eval_data, kp_history, dictionary, stage):
                         if stage[hand] == "load":
                             # count[hand] +=1
                             to_count[hand] = True
-
                             stage[hand] = "release"
                             
             '''
@@ -1062,7 +1057,6 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 # packet = str(max(count_v2)) + "," + str(int(stg))
                 # packet = [float(count_v2[0]),float(stg)]
                 # packet = [0,0]
-                #print(stg)
 
                 logging3.debug("act: %s", stg)
                 # print("stg is : ", stage_v2)

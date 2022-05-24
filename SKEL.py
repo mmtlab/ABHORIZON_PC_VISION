@@ -184,7 +184,7 @@ class Undistorter:
     def undistortOPT(self, img):
 
         if self.cachedM1 is None or self.cachedM2 is None:
-            logging2.info("calculating map1 and map 2")
+            logging2.debug("calculating map1 and map 2")
             # calc map1,map2
             DIM = (640, 480)
 
@@ -208,7 +208,7 @@ class Undistorter:
             # cache the homography matrix
             self.cachedM1 = map1
             self.cachedM2 = map2
-            logging2.info("saved map1 and 2")
+            logging2.debug("saved map1 and 2")
 
             # print("DONE! completed map1 and 2, dim = ", (self.cachedM1).shape, (self.cachedM2).shape)
 
@@ -219,7 +219,7 @@ class Undistorter:
     def undistortOPT180(self, img):
 
         if self.cachedM1180 is None or self.cachedM2180 is None:
-            logging2.info("calculating m1, m2 180")
+            logging2.debug("calculating m1, m2 180")
 
             K = np.array([[256.08951474686006, 0.0, 338.0670093090018], [0.0, 256.106658840997, 249.32266973335038],
                           [0.0, 0.0, 1.0]])
@@ -240,7 +240,7 @@ class Undistorter:
             # cache the homography matrix
             self.cachedM1180 = map1180
             self.cachedM2180 = map2180
-            logging2.info("saved map1 and 2 180")
+            logging2.debug("saved map1 and 2 180")
 
             # print("DONE! completed map1 and 2, dim = ", (self.cachedM1).shape, (self.cachedM2).shape)
 
@@ -421,11 +421,21 @@ def skeletonizer(KP_global, EX_global, q):
     logging2.info("length camera index : %s", len(camera_index))
     if len(camera_index) == 2:
         logging2.info("2 camera system")
+        try:
+            cap = cv2.VideoCapture(camera_index[camera_index_primary])
+            logging2.info("primary camera connected, CAP ok")
 
-        cap = cv2.VideoCapture(camera_index[camera_index_primary])
+        except:
+            logging2.info("primary camera index ERROR")
+            
         if real_time_camera == True:
-            cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
-            logging2.info("low camera as evaluation sensor")
+            try:
+                cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+                logging2.info("secondary camera OK -inizialized cap-(LOW) (secondary sensor)")
+            except:
+                logging2.info("ERROR SECONDARY CAMERA _ LOW _CAM _ CAP _ ERROR)")
+
+                
         else:
             try:
                 path = "/home/abhorizon/ABHORIZON_PC_VISION/data/old_test/video_subject_z_ex_1.avi"
@@ -438,13 +448,13 @@ def skeletonizer(KP_global, EX_global, q):
 
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
-        logging2.info("frame dimension: {}".format(frame_width2, frame_height2))
+        logging2.info("frame dimension: {}".format([frame_width2, frame_height2]))
 
         frame_width1 = int(cap1.get(3))
         frame_height1 = int(cap1.get(4))
 
     elif len(camera_index) == 1:
-        logging2.info("1 camera system")
+        logging2.error("ERROR 1 camera system")
         cap = cv2.VideoCapture(camera_index[0])
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
@@ -496,8 +506,10 @@ def skeletonizer(KP_global, EX_global, q):
                 else:
                     ex_string = read_shared_mem_for_ex_string(EX_global.value)
                     dictionary = EVA.ex_string_to_config_param(ex_string)
+                    
                     logging2.info("creating dict: %s",dictionary)
                     ID = dictionary["ID"]
+                    logging2.info("EXERCISE ID: %s ", ID)
                     continue
 
 
@@ -511,6 +523,8 @@ def skeletonizer(KP_global, EX_global, q):
             # image=undistort(image)
             # image1=undistort(image1)
             # print("read image succes")
+            
+            
             if len(camera_index) == 2:
                 if ID >= 50 and ID <= 99:
                     success, image = cap1.read()  #capture low camera
