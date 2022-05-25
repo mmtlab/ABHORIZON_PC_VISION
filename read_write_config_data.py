@@ -19,7 +19,7 @@ def check_new_exercise_in_excel_file():
     config.read(ini_ex_file)
     sections = config.sections()
     print(sections)
-    # Print the content
+    # Print the content e togli tutti i nan
     IDS = (excel_data["id"]).tolist()
     IDS =  [x for x in IDS if pd.notnull(x)]
     exercise = (excel_data["exercise"]).tolist()
@@ -28,7 +28,7 @@ def check_new_exercise_in_excel_file():
 
     #remove nan object
     exercise =  [x for x in exercise if pd.notnull(x)]
-
+#cerca eseercizi mancanti
     missing_ex = list(set(exercise).difference(sections))
 
     for i in range(len(missing_ex)):
@@ -43,13 +43,13 @@ def check_new_exercise_in_excel_file():
 
     sections = config.sections()
     print(sections)
-
+#se dovessero esserci dei parametri non assegnati , assegno spazio vuoto (poi il parser mette default
     while len(IDS) < len(exercise):
         IDS.append("")
 
     while len(target) < len(exercise):
         target.append("")
-
+#inserisce parametri di sezione guardando dall excel
     for k in range(len(exercise)):
         #print(target[k])
         config.set(exercise[k], 'target_bar', str(target[k]))
