@@ -13,6 +13,8 @@ import EVA
 import SKEL
 import ctypes
 import psutil
+import read_write_config_data
+import shutil
 
 #logging.basicConfig(filename='MAIN_LOG.log', encoding='utf-8', level=logging.DEBUG)
 logging1 = logging.getLogger('MAIN')
@@ -108,8 +110,39 @@ def main():
 
         exercise_string = multiprocessing.Value("i", 0) #(id esercizio)
         ex_count = multiprocessing.Value("i", 0)
-
         
+        #reading new exercise
+        
+        try:
+            missing = read_write_config_data.check_new_exercise_in_excel_file()
+            logging1.info("new exercise: %s",missing)
+        except:
+            logging1.info("error reading excel file")
+        '''
+            
+        cwd = os.getcwd()
+
+        path = cwd + '/data/'
+
+        moveto = cwd + '/direct_data_connection/'
+        #csvCounter = len(glob.glob1(path, "*.csv"))
+
+        files = os.listdir(path)
+        files.sort()
+        logging1.info("files_to_move: %s",files)
+
+
+        for f in files:
+            name, ext = os.path.splitext(f)
+            if ext == '.csv':
+                src = path + f
+                dst = moveto + f
+                shutil.move(src, dst)
+            else:
+                logging1.debug("error file type")
+        
+
+        '''
         # creo la variabile che conterra' i keypoints dello scheletro,
         # questi sono 33 con coordinate (x, y), quindi istanzio un array da 66 valori
         # per contenere 33 x e 33 y
