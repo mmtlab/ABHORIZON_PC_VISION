@@ -26,7 +26,7 @@ logging1.addHandler(fh)
 #logging.basicConfig(filename='MAIN_LOG.log', filemode='a', level=logging.DEBUG)
 logging1.info(".............................................")
 
-logging1.info("____!!!!!!!_____starting time____!!!!!!!_____: %s",datetime.now())
+logging1.info("____!!!!!!!_____starting BOOSE time____!!!!!!!_____: %s",datetime.now())
 logging1.info(".............................................")
 
 def supervisor(process_ids):
