@@ -452,7 +452,7 @@ def TCP_listen_check_4_string(string_from_tcp_ID, ex_string_recived):
     elif string_from_tcp_ID.value == 10:
         ex_string_recived = "pause"
         return ex_string_recived
-    elif string_from_tcp_ID.value == 100:
+    elif string_from_tcp_ID.value == 1000:
         ex_string_recived = "start"
         return ex_string_recived
     else:

@@ -54,7 +54,7 @@ def listen_for_TCP_string(string_from_tcp_ID):
         elif seg == "pause":
             string_from_tcp_ID.value = 10
         elif seg == "start":
-            string_from_tcp_ID.value = 100
+            string_from_tcp_ID.value = 1000
         else:
             string_from_tcp_ID.value = EVA.ex_string_to_ID(seg)
     s.close()
