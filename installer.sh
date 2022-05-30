@@ -6,6 +6,7 @@ lsb_release -a
 echo "check connection :"
 ping -q -c1 google.com &>/dev/null && echo online || echo offline
 #first install python 3.6
+echo  "call : << pip freeze > requirements.txt  << to generate a requirements file of the python libs to export this project"
 echo "install prerequisites..."
 sudo add-apt-repository ppa:deadsnakes/ppa  
 sudo apt update && apt upgrade -y
