@@ -1,9 +1,9 @@
 #!/bin/bash
 
 cd
-
+echo "ubuntu version:"
+lsb_release -a
 echo "check connection :"
-
 ping -q -c1 google.com &>/dev/null && echo online || echo offline
 #first install python 3.6
 echo "install prerequisites..."
@@ -14,13 +14,14 @@ sudo apt-get install libssl-dev openssl -y
 sudo apt-get install build-essential checkinstall -y
 sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev -y
 #install python version
-echo "installing...python 3.6.9"
-sudo apt-get install python3.6 -y
+echo "installing...python 3.8.9"
+sudo apt-get install python3.8 -y
 
 echo "Ensure pip, setuptools, and wheel are up to date"
 
 sudo apt-get install python3-pip -y
 python3.6 -m pip install --upgrade pip setuptools wheel
+echo "attention: selecting the correct version of python"
 sudo update-alternatives --install /usr/bin/python python3 /usr/bin/python3.6 1
 sudo update-alternatives --install /usr/bin/python python3 /usr/bin/python3.8 2
 sudo update-alternatives --list python3
@@ -42,7 +43,7 @@ read -p "wait any key to continue"
 cd
 sudo apt-get install git -y
 echo "download repo"
-git clone https://github.com/bernardolanza93/ABHORIZON_PC_VISION.git
+git clone https://github.com/mmtlab/ABHORIZON_PC_VISION.git
 echo "install packages"
 cd ABHORIZON_PC_VISION
 sudo pip3 install -r requirements.txt
