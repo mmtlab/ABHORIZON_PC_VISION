@@ -20,7 +20,7 @@ def check_new_exercise_in_excel_file():
 
     #sostituisco i nan con spazi vuoti
     excel_data= excel_data.replace(np.nan, '', regex=True)
-    print(excel_data)
+    #print(excel_data)
     config = configparser.ConfigParser()
     config.read(ini_ex_file)
     sections = config.sections()
@@ -34,9 +34,20 @@ def check_new_exercise_in_excel_file():
     #cerca eseercizi mancanti
     missing_ex = list(set(exercise).difference(sections))
     #no more in excel
-    deprecated = list(set(sections).difference(exercise))
-    deprecated.remove('default')
-    print("deprecated: ", deprecated)
+    deprecated_full = list(set(sections).difference(exercise))
+    deprecated_full.remove('default')
+    #non considerare i deprecated gia
+    deprecated = []
+    for a in range(len(deprecated_full)):
+        string_segments = deprecated_full[a].split('_')
+        if string_segments[0] != 'deprecated':
+            deprecated.append(deprecated_full[a])
+
+
+
+
+
+    print("deprecated to remove: %s", deprecated)
     for s in range(len(deprecated)):
         old_ex = deprecated[s]
         for j in range(len(sections)):
@@ -44,19 +55,15 @@ def check_new_exercise_in_excel_file():
                 #change name of ini files in deprecated_ex
                 #create new section renamed deprecated_old_ex
                 my_section_new_name = "deprecated_" + old_ex
-                print("sect new name:", my_section_new_name)
                 config.add_section(my_section_new_name)
-                old_ex_section = config[old_ex]
-                print("section old object:",old_ex_section)
+
 
                 for option, value in config.items(old_ex):
-                    print("opt and value",option, value)
                     config.set(my_section_new_name, option, value)
                 config.remove_section(old_ex)
 
 
-    print("EEENNDNDDNDNDD____modifyingggg now....")
-    time.sleep(5)
+
     newini = open(ini_ex_file, 'w')
     config.write(newini)
 
@@ -70,11 +77,12 @@ def check_new_exercise_in_excel_file():
         if missing_ex[i] != '':
             config.add_section(missing_ex[i])
         else:
+            pass
 
-            print("empty exercise in missing, skip")
+        #print("empty exercise in missing, skip")
 
     missing_ex= [x for x in missing_ex if x]
-    print("missing",missing_ex)
+    #print("missing",missing_ex)
 
 
 
@@ -94,32 +102,34 @@ def check_new_exercise_in_excel_file():
         target.append("")
 #inserisce parametri di sezione guardando dall excel
     nex = len(exercise)
-    print(exercise)
+    #print(exercise)
     for k in range(nex):
 
 
 
 
         if exercise[k] != '':
-            print(exercise[k])
+            #print(exercise[k])
             if target[k] == '':
                 config.set(exercise[k], 'target_bar', '')
-                print("empty target")
+                #print("empty target")
             else:
                 config.set(exercise[k], 'target_bar', str(target[k]))
 
             if IDS[k] == '':
                 config.set(exercise[k], 'id', '')
-                print("empty id")
+                #print("empty id")
             else:
                 config.set(exercise[k], 'id', str(int(IDS[k])))
         else:
-            print("remove incomplete line // no exercise:",exercise[k],target[k],IDS[k])
+            #print("remove incomplete line // no exercise:",exercise[k],target[k],IDS[k])
+            pass
 
 
 
     newini = open(ini_ex_file, 'w')
     config.write(newini)
+    print("new exercise: %s",missing_ex)
 
     return missing_ex
 
