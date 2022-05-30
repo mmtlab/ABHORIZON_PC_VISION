@@ -4,6 +4,7 @@ import EVA
 import os
 import configparser
 import numpy as np
+import time
 
 
 
@@ -32,6 +33,34 @@ def check_new_exercise_in_excel_file():
     #remove nan object
     #cerca eseercizi mancanti
     missing_ex = list(set(exercise).difference(sections))
+    #no more in excel
+    deprecated = list(set(sections).difference(exercise))
+    deprecated.remove('default')
+    print("deprecated: ", deprecated)
+    for s in range(len(deprecated)):
+        old_ex = deprecated[s]
+        for j in range(len(sections)):
+            if old_ex == sections[j]:
+                #change name of ini files in deprecated_ex
+                #create new section renamed deprecated_old_ex
+                my_section_new_name = "deprecated_" + old_ex
+                print("sect new name:", my_section_new_name)
+                config.add_section(my_section_new_name)
+                old_ex_section = config[old_ex]
+                print("section old object:",old_ex_section)
+
+                for option, value in config.items(old_ex):
+                    print("opt and value",option, value)
+                    config.set(my_section_new_name, option, value)
+                config.remove_section(old_ex)
+
+
+    print("EEENNDNDDNDNDD____modifyingggg now....")
+    time.sleep(5)
+    newini = open(ini_ex_file, 'w')
+    config.write(newini)
+
+
 
 
 
