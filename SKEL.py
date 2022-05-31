@@ -413,6 +413,7 @@ def skeletonizer(KP_global, EX_global, q):
     logging2.info("ID of process running worker1: {}".format(os.getpid()))
     dictionary = {}
     ID = 0
+    camera = 0
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 5000
     fs = sender.FrameSegment(s, port)
@@ -511,7 +512,9 @@ def skeletonizer(KP_global, EX_global, q):
                     
                     logging2.info("creating dict: %s",dictionary)
                     ID = dictionary["ID"]
+                    camera = int(dictionary["camera"])
                     logging2.info("EXERCISE ID: %s ", ID)
+                    logging2.info("EXERCISE camera: %s ", camera)
                     continue
 
 
@@ -521,6 +524,7 @@ def skeletonizer(KP_global, EX_global, q):
                 dictionary = {}
                 ex_string = ""
                 ID = 0
+                camera = 0
             #print("id", ID)
             # image=undistort(image)
             # image1=undistort(image1)
@@ -528,9 +532,9 @@ def skeletonizer(KP_global, EX_global, q):
             
             
             if len(camera_index) == 2:
-                if ID >= 50 and ID <= 99:
+                if camera < 2:
                     success, image = cap1.read()  #capture low camera
-                    if ID < 80:
+                    if camera == 1:
                         #logging2.info("correction of distortion")
                         if real_time_camera == True:
                             image = undistorter.undistortOPT180(image) #correct distortion
