@@ -404,6 +404,8 @@ def skeletonizer(KP_global, EX_global, q):
     inizialized_csv_file = False
     exercise_csv = ""
     time_csv = ""
+    #user, dati dell utente, identificativo
+    user = 0
     
     # corpo del codice con ini camere e rete neurale
     # printing process id
@@ -651,7 +653,7 @@ def skeletonizer(KP_global, EX_global, q):
                     kp = landmarks2KP(results.pose_landmarks, sti)
                     if writing == True:
                         if inizialized_csv_file == False:
-                            exercise_csv = ex_string
+                            exercise_csv = "user_"+ user + "_" + ex_string
                             time_csv = datetime.now()
                             write_data_csv(exercise_csv,time_csv,header_csv)
                             inizialized_csv_file = True

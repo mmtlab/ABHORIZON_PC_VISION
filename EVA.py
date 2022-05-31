@@ -878,6 +878,10 @@ def evaluator(EX_global, q, string_from_tcp_ID):
     # printing process id
     logging3.info("ID of process running evaluator: {}".format(os.getpid()))
 
+
+    #the user for data saving
+    user = 0
+
     # time.sleep(3)
     kp = []
     kp_story = []
@@ -976,7 +980,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
                 if data_collection == True:
                     if inizialize_csv_file == False:
                         time_csv = datetime.now()
-                        exercise_csv = ex_string
+                        exercise_csv = "user_"+ user + "_" + ex_string
                         header = ["count","D2_r","D2_l","V_r","V_l","A_r","A_l","VA_r","VA_l", "retro_param"]
                         write_data_csv(exercise_csv,time_csv,header)
                         inizialize_csv_file = True
