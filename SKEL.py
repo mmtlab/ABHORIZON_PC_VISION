@@ -657,7 +657,7 @@ def skeletonizer(KP_global, EX_global, q):
                     kp = landmarks2KP(results.pose_landmarks, sti)
                     if writing == True:
                         if inizialized_csv_file == False:
-                            exercise_csv = "user_"+ user + "_" + ex_string
+                            exercise_csv = "user_"+ str(user) + "_" + ex_string
                             time_csv = datetime.now()
                             write_data_csv(exercise_csv,time_csv,header_csv)
                             inizialized_csv_file = True
