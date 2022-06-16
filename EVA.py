@@ -354,7 +354,7 @@ def ex_string_to_config_param(ex_string):
                 camera = config.get(exercise, 'camera')
             except:
                 logging3.warning("missing line of config, switch to default camera")
-                motor_history_events = config.get("default", 'camera')
+                camera = config.get("default", 'camera')
             camera = int(default_dictionary_control(camera, 'camera'))
 
             dictionary = {
