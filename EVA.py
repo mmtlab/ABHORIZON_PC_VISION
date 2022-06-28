@@ -127,6 +127,13 @@ def load_all_exercise_in_RAM():
             camera = config.get("default", 'camera')  # changes done
         camera = int(default_dictionary_control(camera, 'camera'))
 
+        try:
+            motor = config.get(exercise, 'motor')
+        except:
+            logging3.warning("missing line of config, switch to default motor")
+            motor = config.get("default", 'motor')  # changes done
+        motor = int(default_dictionary_control(motor, 'motor'))
+
         dictionary = {
             "segments_to_render": segments_to_render,
             "joints_to_evaluate": joints_to_evaluate,
@@ -138,7 +145,8 @@ def load_all_exercise_in_RAM():
             "motor_history_events": motor_history_events,
             "threshold_count": threshold_count,
             "histeresys": HISTERESYS,
-            "camera": camera
+            "camera": camera,
+            "motor": motor
 
         }
         # print("dictionary : {}".format(dictionary))
@@ -486,6 +494,13 @@ def ex_string_to_config_param(ex_string):
                 camera = config.get("default", 'camera') #changes done
             camera = int(default_dictionary_control(camera, 'camera'))
 
+            try:
+                motor = config.get(exercise, 'motor')
+            except:
+                logging3.warning("missing line of config, switch to default motor")
+                motor = config.get("default", 'motor') #changes done
+            motor = int(default_dictionary_control(motor, 'motor'))
+
             dictionary = {
                 "segments_to_render": segments_to_render,
                 "joints_to_evaluate": joints_to_evaluate,
@@ -497,7 +512,8 @@ def ex_string_to_config_param(ex_string):
                 "motor_history_events": motor_history_events,
                 "threshold_count": threshold_count,
                 "histeresys": HISTERESYS,
-                "camera": camera
+                "camera": camera,
+                "motor": motor
 
             }
             # print("dictionary : {}".format(dictionary))
