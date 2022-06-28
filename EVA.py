@@ -162,7 +162,7 @@ def load_all_exercise_in_RAM():
 
 
 
-    print(all_exercise)
+
     return all_exercise
 
 def writeCSVdata(data):
