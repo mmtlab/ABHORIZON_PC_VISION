@@ -400,7 +400,7 @@ def skeletonizer(KP_global, EX_global, q, user_id):
         header_csv.append("x"+ str(nkp))
         header_csv.append("y"+ str(nkp))
     print(header_csv)
-        
+    all_exercise = EVA.load_all_exercise_in_RAM()
     #flag for file csv generation
     inizialized_csv_file = False
     exercise_csv = ""
