@@ -247,5 +247,5 @@ def check_new_exercise_in_excel_file():
 
 
 print("new exercise:",check_new_exercise_in_excel_file())
-
+all_exercise = EVA.load_all_exercise_in_RAM()
 

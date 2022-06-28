@@ -27,7 +27,135 @@ logging3.info(".............................................")
 logging3.info("____!!!!!!!_____starting time____!!!!!!!_____: %s",datetime.now())
 logging3.info(".............................................")
 
+def load_all_exercise_in_RAM():
+    """
+    load_all_exercise_in_RAM
 
+    :param nothing:
+
+    :return: all_exercise: a dictionary of dictionary with all exercise
+    """
+    #open the ini file
+    config = configparser.ConfigParser()
+    config.read('exercise_info.ini')
+    sections = config.sections()
+    all_exercise = {}
+    for exercise in sections:
+
+
+
+        try:
+            segments_to_render = config.get(exercise, 'segments_to_render')
+        except:
+            logging3.warning("missing line of config, switch to default segments_to_render")
+            segments_to_render = config.get("default", 'segments_to_render')
+        segments_to_render = default_dictionary_control(segments_to_render, 'segments_to_render')
+        segments_to_render = segments_to_render.split(',')
+
+        try:
+            joints_to_evaluate = config.get(exercise, 'joints_to_evaluate')
+        except:
+            logging3.warning("missing line of config, switch to default joints_to_evaluate")
+            joints_to_evaluate = config.get("default", 'joints_to_evaluate')
+        joints_to_evaluate = default_dictionary_control(joints_to_evaluate, 'joints_to_evaluate')
+        joints_to_evaluate = joints_to_evaluate.split(',')
+
+        try:
+            evaluation_range = config.get(exercise, 'evaluation_range')
+        except:
+            logging3.warning("missing line of config, switch to default evaluation_range")
+            evaluation_range = config.get("default", 'evaluation_range')
+        evaluation_range = default_dictionary_control(evaluation_range, 'evaluation_range')
+        evaluation_range = [int(x) for x in evaluation_range.split(",")]
+
+        try:
+            ID = config.get(exercise, 'ID')
+        except:
+            logging3.warning("missing line of config, switch to default ID")
+            ID = config.get("default", 'ID')
+        ID = int(default_dictionary_control(ID, 'ID'))
+
+        try:
+            joints_with_ropes = config.get(exercise, 'joints_with_ropes')
+        except:
+            logging3.warning("missing line of config, switch to default joints_with_ropes")
+            joints_with_ropes = config.get("default", 'joints_with_ropes')
+        joints_with_ropes = default_dictionary_control(joints_with_ropes, 'joints_with_ropes')
+        joints_with_ropes = joints_with_ropes.split(',')
+
+        try:
+            target_bar = config.get(exercise, 'target_bar')
+        except:
+            logging3.warning("missing line of config, switch to default target_bar")
+            target_bar = config.get("default", 'target_bar')
+        target_bar = default_dictionary_control(target_bar, 'target_bar')
+        target_bar = target_bar.split(',')
+
+        try:
+            threshold = config.get(exercise, 'threshold')
+        except:
+            logging3.warning("missing line of config, switch to default threshold")
+            threshold = config.get("default", 'threshold')
+        threshold = int(default_dictionary_control(threshold, 'threshold'))
+
+        try:
+            motor_history_events = config.get(exercise, 'motor_history_events')
+        except:
+            logging3.warning("missing line of config, switch to default motor_history_events")
+            motor_history_events = config.get("default", 'motor_history_events')
+        motor_history_events = int(default_dictionary_control(motor_history_events, 'motor_history_events'))
+
+        try:
+            threshold_count = config.get(exercise, 'threshold_count')
+        except:
+            logging3.warning("missing line of config, switch to default threshold_count")
+            threshold_count = config.get("default", 'threshold_count')
+        threshold_count = int(default_dictionary_control(threshold_count, 'threshold_count'))
+
+        try:
+            HISTERESYS = config.get(exercise, 'histeresys')
+        except:
+            logging3.warning("missing line of config, switch to default histeresys")
+            HISTERESYS = config.get("default", 'histeresys')
+        HISTERESYS = (int(default_dictionary_control(HISTERESYS, 'histeresys'))) / 100
+        # print("joints and target : ", joints_target)
+
+        try:
+            camera = config.get(exercise, 'camera')
+        except:
+            logging3.warning("missing line of config, switch to default camera")
+            camera = config.get("default", 'camera')  # changes done
+        camera = int(default_dictionary_control(camera, 'camera'))
+
+        dictionary = {
+            "segments_to_render": segments_to_render,
+            "joints_to_evaluate": joints_to_evaluate,
+            "evaluation_range": evaluation_range,
+            "ID": ID,
+            "joints_with_ropes": joints_with_ropes,
+            "target_bar": target_bar,
+            "threshold": threshold,
+            "motor_history_events": motor_history_events,
+            "threshold_count": threshold_count,
+            "histeresys": HISTERESYS,
+            "camera": camera
+
+        }
+        # print("dictionary : {}".format(dictionary))
+        for key, value in dictionary.items():
+            # print(key, '\t', value)
+
+            if isinstance(value, list):
+                if all(isinstance(s, str) for s in value):
+                    num_value = dictionary_string_2_machine_param(value)
+                    dictionary[key] = num_value
+
+        all_exercise[exercise] = dictionary
+
+
+
+    print(all_exercise)
+    return all_exercise
 
 def writeCSVdata(data):
     """
@@ -266,6 +394,7 @@ def ex_string_to_config_param(ex_string):
     sections = config.sections()
 
     # print("sections are : {}".format(sections))
+
 
 
 
@@ -880,6 +1009,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
 
 
     #the user for data saving
+    all_exercise = load_all_exercise_in_RAM()
     user = user_id.value
 
     # time.sleep(3)
