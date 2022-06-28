@@ -198,7 +198,7 @@ def default_dictionary_control(parameter,descriptor):
         config = configparser.ConfigParser()
         config.read('exercise_info.ini')
         parameter = config.get('default', descriptor)
-        logging3.warning("missing parameter :", descriptor)
+        logging3.warning("missing parameter :%s", descriptor)
         logging3.warning("automaticcally selected the default one")
         return parameter
     return parameter
