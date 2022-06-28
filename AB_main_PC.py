@@ -187,7 +187,7 @@ def main():
         # nota: se ho un solo argomento e questo e' una stringa, devo passarlo
         # con una virgola per fargli capire che e' un elemento e non n, cioe'
         # 'hello' deve essere interpretato come 1 elemento e non 5 ('h','e','l','l','o')
-        p3 = multiprocessing.Process(target=receiver.listen_for_TCP_string, args=(string_from_tcp_ID,))
+        p3 = multiprocessing.Process(target=receiver.listen_for_TCP_string, args=(string_from_tcp_ID,user_id))
         
 
   

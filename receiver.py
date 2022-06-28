@@ -22,7 +22,7 @@ def dump_buffer(s):
             break
 
 
-def listen_for_TCP_string(string_from_tcp_ID):
+def listen_for_TCP_string(string_from_tcp_ID,user_id):
 
     #port = 1025
     ip = '127.0.0.1'
@@ -48,7 +48,7 @@ def listen_for_TCP_string(string_from_tcp_ID):
         seg = seg[:-1]
         
         EVA.logging3.critical("::RECEIVER::__FROM TCP SEGB: %s",seg)
-
+        user_id.value = 0
         if seg == "stop":
             string_from_tcp_ID.value = 0
         elif seg == "pause":
