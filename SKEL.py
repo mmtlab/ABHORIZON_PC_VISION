@@ -385,11 +385,12 @@ def landmarks2KP(landmarks, image):
     return kpp
 
 
-def skeletonizer(KP_global, EX_global, q):
+def skeletonizer(KP_global, EX_global, q, user_id):
     """
     Main function of the skeletonizer, perform camera management, neural network detection, rendering, and image streaming
     :param EX_global: ID of the current exercise/state saved in the multiprocessing memory
     :param q: the multiprocessing queue where kp are put by the skeletonizer and consumed  by the evaluator
+    :param user_id: the identificative of the user that is using the machine to do the exercises
 
     :return: nothing
     """
@@ -405,7 +406,7 @@ def skeletonizer(KP_global, EX_global, q):
     exercise_csv = ""
     time_csv = ""
     #user, dati dell utente, identificativo
-    user = 0
+    user = user_id.value
     
     # corpo del codice con ini camere e rete neurale
     # printing process id

@@ -864,7 +864,7 @@ def compared_counting(compared_count,count_target, count_angle,cooldown_frame):
     return compared_count, cooldown_frame
 
 
-def evaluator(EX_global, q, string_from_tcp_ID):
+def evaluator(EX_global, q, string_from_tcp_ID,user_id):
     """
     funzione main per l evaluator, gestisce le sub funzioni e lavora come una macchina a stati
 
@@ -880,7 +880,7 @@ def evaluator(EX_global, q, string_from_tcp_ID):
 
 
     #the user for data saving
-    user = 0
+    user = user_id.value
 
     # time.sleep(3)
     kp = []

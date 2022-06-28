@@ -107,7 +107,7 @@ def main():
         
         stage = ""
         process_ids = []
-
+        user_id = multiprocessing.Value("i", 0)
         exercise_string = multiprocessing.Value("i", 0) #(id esercizio)
         ex_count = multiprocessing.Value("i", 0)
         
@@ -182,8 +182,8 @@ def main():
         # creating processes
         #LIFO queue 1, gli interessa solo dell ultimo elemento prodotto dallo skeletonizzatore
 
-        p1 = multiprocessing.Process(target=SKEL.skeletonizer, args=(KeyPoints, exercise_string,q))
-        p2 = multiprocessing.Process(target=EVA.evaluator, args=(exercise_string,q,string_from_tcp_ID))
+        p1 = multiprocessing.Process(target=SKEL.skeletonizer, args=(KeyPoints, exercise_string,q,user_id))
+        p2 = multiprocessing.Process(target=EVA.evaluator, args=(exercise_string,q,string_from_tcp_ID,user_id))
         # nota: se ho un solo argomento e questo e' una stringa, devo passarlo
         # con una virgola per fargli capire che e' un elemento e non n, cioe'
         # 'hello' deve essere interpretato come 1 elemento e non 5 ('h','e','l','l','o')
