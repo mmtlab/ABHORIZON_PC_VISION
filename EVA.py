@@ -1025,7 +1025,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
 
 
     #the user for data saving
-    all_exercise = load_all_exercise_in_RAM()
+    #all_exercise = load_all_exercise_in_RAM()
     user = user_id.value
 
     # time.sleep(3)
