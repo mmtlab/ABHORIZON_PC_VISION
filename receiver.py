@@ -11,6 +11,19 @@ from datetime import datetime
 
 MAX_DGRAM = 2 ** 16
 
+def search_for_user_info(string_from_tcp):
+    #es: user_0_triceps_push_down_06-24-2022_09:34:36.csv
+    codification_string = "setuser"
+    splitted = string_from_tcp.split('_')
+    if splitted[0] == codification_string:
+        user = splitted[1]
+        #EVA.logging3.critical("new user communication detected : %s", user)
+        return user
+    else:
+        return None
+
+
+
 
 def dump_buffer(s):
     """ Emptying buffer frame """
@@ -33,6 +46,7 @@ def listen_for_TCP_string(string_from_tcp_ID,user_id):
 
     s.bind((ip, port))
     EVA.logging3.critical("::RECEIVER::__reciving config: IP = {}, PORT = {}. ".format(ip, port))
+    user_id.value = 0
 
     while True:
 
@@ -48,7 +62,15 @@ def listen_for_TCP_string(string_from_tcp_ID,user_id):
         seg = seg[:-1]
         
         EVA.logging3.critical("::RECEIVER::__FROM TCP SEGB: %s",seg)
-        user_id.value = 0
+
+        user_research = search_for_user_info(seg)
+        if user_research != None:
+            EVA.logging3.critical("WELCOME new user! : %s", user_research)
+            user_id.value = user_research
+        else:
+            pass
+
+
         if seg == "stop":
             string_from_tcp_ID.value = 0
         elif seg == "pause":
