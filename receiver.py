@@ -17,7 +17,7 @@ def search_for_user_info(string_from_tcp):
     splitted = string_from_tcp.split('_')
     if splitted[0] == codification_string:
         user = splitted[1]
-        #EVA.logging3.critical("new user communication detected : %s", user)
+        EVA.logging3.critical("new user communication detected : %s", user)
         return user
     else:
         return None
