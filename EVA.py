@@ -374,6 +374,7 @@ def dictionary_string_2_machine_param(value):
 
 
     for bodyframe in value:
+        #togli gli spazi
         kps = config_geometrical["ALIAS"][bodyframe.replace(" ", "")]
 
         kps = [int(x) for x in kps.split(",")]
