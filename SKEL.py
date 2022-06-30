@@ -544,6 +544,8 @@ def skeletonizer(KP_global, EX_global, q, user_id):
                         image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
                         image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
                         #print("___________co0rrs")
+                        #mantengo comunque l undistorted che mi puo servire per il rendering e basta
+                        stiched = undistorter.undistortOPT180(image)  # correct distortion
 
                 else:
                     success, image = cap.read()
@@ -678,7 +680,10 @@ def skeletonizer(KP_global, EX_global, q, user_id):
 
                     # print("KP global found : {}".format(len(KP_global)))
                     sti = rendering_kp_on_frame(dictionary["segments_to_render"],kp,sti)
-                    #KP_renderer_on_frame(ex_string, kp, sti)
+
+                    #se volessi renderizzare su immagine stichata dovro usare il seguente
+                    #stiched = rendering_kp_on_frame(dictionary["segments_to_render"],kp,stiched)
+
                 else:
                     logging2.debug("results is none:%s ", results.pose_landmarks)
 
