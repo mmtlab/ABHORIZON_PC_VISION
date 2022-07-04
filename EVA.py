@@ -44,6 +44,8 @@ def load_all_exercise_in_RAM():
 
 
 
+
+
         try:
             segments_to_render = config.get(exercise, 'segments_to_render')
         except:
@@ -127,12 +129,16 @@ def load_all_exercise_in_RAM():
             camera = config.get("default", 'camera')  # changes done
         camera = int(default_dictionary_control(camera, 'camera'))
 
+
         try:
             motor = config.get(exercise, 'motor')
+
         except:
             logging3.warning("missing line of config, switch to default motor")
             motor = config.get("default", 'motor')  # changes done
+
         motor = int(default_dictionary_control(motor, 'motor'))
+
 
         dictionary = {
             "segments_to_render": segments_to_render,
@@ -149,6 +155,8 @@ def load_all_exercise_in_RAM():
             "motor": motor
 
         }
+
+
         # print("dictionary : {}".format(dictionary))
         for key, value in dictionary.items():
             # print(key, '\t', value)
@@ -159,6 +167,9 @@ def load_all_exercise_in_RAM():
                     dictionary[key] = num_value
 
         all_exercise[exercise] = dictionary
+
+
+        #print("--- %s seconds ---" % (time.time() - start_time), exercise)
 
 
 
@@ -196,10 +207,12 @@ def default_dictionary_control(parameter,descriptor):
     """
     if parameter is None or parameter == '':
         config = configparser.ConfigParser()
+        start_time = time.time()
         config.read('exercise_info.ini')
+        print("--- %s seconds ---" % (time.time() - start_time), descriptor)
         parameter = config.get('default', descriptor)
-        logging3.warning("missing parameter :%s", descriptor)
-        logging3.warning("automaticcally selected the default one")
+        logging3.warning("missing parameter automaticcally selected the default one:%s", descriptor)
+
         return parameter
     return parameter
 
