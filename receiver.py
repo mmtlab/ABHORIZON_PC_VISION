@@ -66,7 +66,7 @@ def listen_for_TCP_string(string_from_tcp_ID,user_id):
         user_research = search_for_user_info(seg)
         if user_research != None:
             EVA.logging3.critical("WELCOME new user! : %s", user_research)
-            user_id.value = user_research
+            user_id.value = int(user_research)
         else:
             pass
 

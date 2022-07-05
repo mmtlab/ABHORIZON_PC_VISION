@@ -424,28 +424,23 @@ def wait_for_keypoints(queuekp):
     """
     # loop 4 waiting the queue of KP from mediapipe
     keypoints = []
-    presence = False
+
+    presence = True
 
     while not keypoints:
 
         try:
             keypoints = queuekp.get(False)
+
         except queue.Empty:
             # print("no KP data aviable: queue empty")
-            presence = False
+
             #trigger of missing image and kp
             #print("q empty")
             pass
 
-        else:
 
-            if not keypoints:
-                presence = False
-                #print("not kp")
-                #logging3.error("no valid kp")
-            else:
-                presence = True
-                return keypoints, presence
+        return keypoints, presence
 
 
 def check_for_string_in_memory(multiprocessing_value_slot):
@@ -917,6 +912,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
     stage_v2 = [0, 0]
     
     #param for save data in csv
+    analysis = False
     time_csv = ""
     exercise_csv = ""
     inizialize_csv_file = False
@@ -1039,68 +1035,86 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
                     config_param_dictionary = ex_string_to_config_param(ex_string,all_exercise)
 
                 kp, presence = wait_for_keypoints(q)
+                #arrivano anche tanti elementi vuoti perche eva e piu veloce di skel
+
+
+                if kp == 0:
+                    #segnala la mancata presenza di persone
+                    analysis = False
+                    #print("no anal!!!!")
+                else:
+                    #elementi vuoti e pieni ma sempre array
+                    analysis = True
+
                 #print("people is presence?:",presence)
-                kp_story.append(kp)
-                STORY = config_param_dictionary["motor_history_events"]
-                while (len(kp_story) > STORY):
-                    kp_story.pop(0)
-                
-                while (len(story_specific) > STORY):
-                    story_specific.pop(0)
-                    
-                    
-                # print("len kp:",len(kp_story))
+                #qui scarto tutti i vuoti
+                if analysis and kp != []:
+                    #print("kp stori", kp_story)
+                    kp_story.append(kp)
+                    STORY = config_param_dictionary["motor_history_events"]
+                    while (len(kp_story) > STORY):
+                        kp_story.pop(0)
 
-                eval_data, count_v2, stage_v2, stage, retro_filter_state = kp_geometry_analisys_v2(eval_data, kp_story,
-                                                                               config_param_dictionary, stage,retro_filter_state)
-                #story_specific, per , angle = specific_joints_evaluator(kp,story_specific, config_param_dictionary)
-                
-                eval_data_angle, count_v2_angle, stage_v2_angle, stage_angle = velocity_tracker_angle(eval_data_angle, kp_story,
-                                                                                                     config_param_dictionary, stage_angle)
-                
-                
-                #print("angle, trigger",count_v2_angle,count_v2) 
-                compared_count, cooldown_frame  = compared_counting(compared_count,count_v2, count_v2_angle,cooldown_frame)
-                # count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
-                # print("count. ",count)
-                if len(story_specific) >5:
-                    med_gradient = np.median(np.gradient(story_specific))
-                    #print("gradeint:",med_gradient)
-                state_value = stage_v2[0] + stage_v2[1] 
-                if state_value > 0:
-                    stg = 1
-                if state_value == 0:
-                    
-                
-                    if stage_v2[0] == stage_v2[1]:
-                        stg = 0
-                       
-                    else:
+                    while (len(story_specific) > STORY):
+                        story_specific.pop(0)
+
+
+                    # print("len kp:",len(kp_story))
+
+                    eval_data, count_v2, stage_v2, stage, retro_filter_state = kp_geometry_analisys_v2(eval_data, kp_story,
+                                                                                   config_param_dictionary, stage,retro_filter_state)
+                    #story_specific, per , angle = specific_joints_evaluator(kp,story_specific, config_param_dictionary)
+
+                    eval_data_angle, count_v2_angle, stage_v2_angle, stage_angle = velocity_tracker_angle(eval_data_angle, kp_story,
+                                                                                                         config_param_dictionary, stage_angle)
+
+
+                    #print("angle, trigger",count_v2_angle,count_v2)
+                    compared_count, cooldown_frame  = compared_counting(compared_count,count_v2, count_v2_angle,cooldown_frame)
+                    # count, stage , per = kp_geometry_analisys(kp, count, stage,per, config_param_dictionary)
+                    # print("count. ",count)
+                    if len(story_specific) >5:
+                        med_gradient = np.median(np.gradient(story_specific))
+                        #print("gradeint:",med_gradient)
+                    state_value = stage_v2[0] + stage_v2[1]
+                    if state_value > 0:
                         stg = 1
-                if state_value < 0:
-                    
-                    #evaluation_range = config_param_dictionary["evaluation_range"]
-                    #if np.median(angle) < evaluation_range[0]*2:
-                    stg = -1
-                    #else:
-                    #   stg = 0
-                    
-            
-                if data_collection == True:
-                    #print(exercise_csv,time_csv)
-                    if exercise_csv != "" and time_csv != "":
-                    
-                        data = [compared_count,eval_data[0],eval_data[1],eval_data[2],eval_data[3], eval_data_angle[0],eval_data_angle[1],eval_data_angle[2],eval_data_angle[3], stg]
-                        write_data_csv(exercise_csv,time_csv,data)
-                ##packet = str(max(count)) + "," + str(int(max(per)))
-                # packet = str(max(count_v2)) + "," + str(int(stg))
-                # packet = [float(count_v2[0]),float(stg)]
-                # packet = [0,0]
+                    if state_value == 0:
 
-                logging3.debug("act: %s", stg)
-                # print("stg is : ", stage_v2)
 
-                sender.send_status(21011, compared_count, stg, 'localhost')
-                # sender.send_status(21011, 5,0,'localhost')
+                        if stage_v2[0] == stage_v2[1]:
+                            stg = 0
+
+                        else:
+                            stg = 1
+                    if state_value < 0:
+
+                        #evaluation_range = config_param_dictionary["evaluation_range"]
+                        #if np.median(angle) < evaluation_range[0]*2:
+                        stg = -1
+                        #else:
+                        #   stg = 0
+
+
+                    if data_collection == True:
+                        #print(exercise_csv,time_csv)
+                        if exercise_csv != "" and time_csv != "":
+
+                            data = [compared_count,eval_data[0],eval_data[1],eval_data[2],eval_data[3], eval_data_angle[0],eval_data_angle[1],eval_data_angle[2],eval_data_angle[3], stg]
+                            write_data_csv(exercise_csv,time_csv,data)
+                    ##packet = str(max(count)) + "," + str(int(max(per)))
+                    # packet = str(max(count_v2)) + "," + str(int(stg))
+                    # packet = [float(count_v2[0]),float(stg)]
+                    # packet = [0,0]
+
+                    logging3.debug("act: %s", stg)
+                    # print("stg is : ", stage_v2)
+
+                    sender.send_status(21011, compared_count, stg, 'localhost')
+                    # sender.send_status(21011, 5,0,'localhost')
+                    #qui potrebbero rientrare i vuoti ma li filtro con analysis che scrive solo quando non ci sono esseri umani
+                elif analysis == False:
+                    sender.send_status(21011, compared_count, 5, 'localhost')
+                    #print("no people no sending stage")
 
 

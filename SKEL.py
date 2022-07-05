@@ -651,7 +651,10 @@ def skeletonizer(KP_global, EX_global, q, user_id):
                                           )
                 '''
                 # converting LM to KP
-                if results.pose_landmarks is not None:
+                if results.pose_landmarks is None:
+                    kp = 0
+
+                else:
                     #svuoto queue
                     #scrivo su csv
                     
@@ -660,6 +663,9 @@ def skeletonizer(KP_global, EX_global, q, user_id):
                         bit = q.get()
 
                     kp = landmarks2KP(results.pose_landmarks, sti)
+                    sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
+                    # se volessi renderizzare su immagine stichata dovro usare il seguente
+                    # stiched = rendering_kp_on_frame(dictionary["segments_to_render"],kp,stiched)
                     if writing == True:
                         if inizialized_csv_file == False:
                             exercise_csv = "user_"+ str(user) + "_" + ex_string
@@ -671,23 +677,21 @@ def skeletonizer(KP_global, EX_global, q, user_id):
                         
                     # print("kp : ",kp)
 
-                    if q.full():
-                        logging2.error("impossible to insert data in full queue")
-                    else:
-
-                        q.put(kp)
-                    
-
-                    # print(KP_global)
-
-                    # print("KP global found : {}".format(len(KP_global)))
-                    sti = rendering_kp_on_frame(dictionary["segments_to_render"],kp,sti)
-
-                    #se volessi renderizzare su immagine stichata dovro usare il seguente
-                    #stiched = rendering_kp_on_frame(dictionary["segments_to_render"],kp,stiched)
-
+                if q.full():
+                    logging2.error("impossible to insert data in full queue")
                 else:
-                    logging2.debug("results is none:%s ", results.pose_landmarks)
+                    q.put(kp)
+
+
+
+                # print(KP_global)
+
+                # print("KP global found : {}".format(len(KP_global)))
+
+
+
+
+
 
             # invio streaming
             fs.udp_frame(sti)
