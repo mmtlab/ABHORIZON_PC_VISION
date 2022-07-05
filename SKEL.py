@@ -557,7 +557,7 @@ def skeletonizer(KP_global, EX_global, q, user_id):
 
             else:
                 success, image = cap.read()
-                image = undistorter.undistortOPT(image)
+                #image = undistorter.undistortOPT(image)
                 #image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
             # image = image[180:frame_width1, 70:frame_height1-70]
@@ -693,6 +693,8 @@ def skeletonizer(KP_global, EX_global, q, user_id):
             # sender.send_status(5002, "KP_success")
             # print("udp completed img")
 
+            if len(camera_index) == 1:
+                cv2.imshow('MediaPipe Pose', sti)
             if showing == True:
                 cv2.imshow('MediaPipe Pose', sti)
             if cv2.waitKey(5) & 0xFF == 27:
