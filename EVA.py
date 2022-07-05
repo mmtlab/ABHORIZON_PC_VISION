@@ -306,7 +306,7 @@ def ex_string_to_ID(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default ID")
                 ID = config.get("default", 'ID')
-            ID = int(default_dictionary_control(ID, 'ID'))
+            ID = int(default_dictionary_control(ID, 'ID',config))
             
             return ID
         
@@ -430,7 +430,7 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default segments_to_render")
                 segments_to_render = config.get("default", 'segments_to_render')    
-            segments_to_render = default_dictionary_control(segments_to_render, 'segments_to_render')
+            segments_to_render = default_dictionary_control(segments_to_render, 'segments_to_render',config)
             segments_to_render = segments_to_render.split(',')
             
             try:
@@ -438,7 +438,7 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default joints_to_evaluate")
                 joints_to_evaluate = config.get("default", 'joints_to_evaluate')
-            joints_to_evaluate = default_dictionary_control(joints_to_evaluate, 'joints_to_evaluate')
+            joints_to_evaluate = default_dictionary_control(joints_to_evaluate, 'joints_to_evaluate',config)
             joints_to_evaluate = joints_to_evaluate.split(',')
             
             try:
@@ -446,7 +446,7 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default evaluation_range")    
                 evaluation_range = config.get("default", 'evaluation_range')
-            evaluation_range = default_dictionary_control(evaluation_range, 'evaluation_range')
+            evaluation_range = default_dictionary_control(evaluation_range, 'evaluation_range',config)
             evaluation_range = [int(x) for x in evaluation_range.split(",")]
             
             try:
@@ -454,14 +454,14 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default ID")
                 ID = config.get("default", 'ID')
-            ID = int(default_dictionary_control(ID, 'ID'))
+            ID = int(default_dictionary_control(ID, 'ID',config))
             
             try:          
                 joints_with_ropes = config.get(exercise, 'joints_with_ropes')
             except:
                 logging3.warning("missing line of config, switch to default joints_with_ropes")
                 joints_with_ropes = config.get("default", 'joints_with_ropes')
-            joints_with_ropes = default_dictionary_control(joints_with_ropes, 'joints_with_ropes')
+            joints_with_ropes = default_dictionary_control(joints_with_ropes, 'joints_with_ropes',config)
             joints_with_ropes = joints_with_ropes.split(',')
             
             try:
@@ -469,7 +469,7 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default target_bar")
                 target_bar = config.get("default", 'target_bar')
-            target_bar = default_dictionary_control(target_bar, 'target_bar')
+            target_bar = default_dictionary_control(target_bar, 'target_bar',config)
             target_bar = target_bar.split(',')
             
             try:           
@@ -477,28 +477,28 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default threshold")
                 threshold = config.get("default", 'threshold')
-            threshold = int(default_dictionary_control(threshold, 'threshold'))
+            threshold = int(default_dictionary_control(threshold, 'threshold',config))
 
             try:
                 motor_history_events = config.get(exercise, 'motor_history_events')
             except:
                 logging3.warning("missing line of config, switch to default motor_history_events")
                 motor_history_events = config.get("default", 'motor_history_events')
-            motor_history_events = int(default_dictionary_control(motor_history_events, 'motor_history_events'))
+            motor_history_events = int(default_dictionary_control(motor_history_events, 'motor_history_events',config))
             
             try:
                 threshold_count = config.get(exercise, 'threshold_count')
             except:
                 logging3.warning("missing line of config, switch to default threshold_count")
                 threshold_count = config.get("default", 'threshold_count')
-            threshold_count = int(default_dictionary_control(threshold_count, 'threshold_count'))
+            threshold_count = int(default_dictionary_control(threshold_count, 'threshold_count',config))
        
             try:
                 HISTERESYS = config.get(exercise, 'histeresys')
             except:
                 logging3.warning("missing line of config, switch to default histeresys")
                 HISTERESYS = config.get("default", 'histeresys')
-            HISTERESYS = (int(default_dictionary_control(HISTERESYS, 'histeresys')))/100
+            HISTERESYS = (int(default_dictionary_control(HISTERESYS, 'histeresys',config)))/100
             # print("joints and target : ", joints_target)
 
             try:
@@ -506,14 +506,14 @@ def ex_string_to_config_param(ex_string):
             except:
                 logging3.warning("missing line of config, switch to default camera")
                 camera = config.get("default", 'camera') #changes done
-            camera = int(default_dictionary_control(camera, 'camera'))
+            camera = int(default_dictionary_control(camera, 'camera',config))
 
             try:
                 motor = config.get(exercise, 'motor')
             except:
                 logging3.warning("missing line of config, switch to default motor")
                 motor = config.get("default", 'motor') #changes done
-            motor = int(default_dictionary_control(motor, 'motor'))
+            motor = int(default_dictionary_control(motor, 'motor',config))
 
             dictionary = {
                 "segments_to_render": segments_to_render,
