@@ -409,6 +409,7 @@ def ex_string_to_config_param(ex_string, all_exe_dict):
     logging3.info("string to claim dictionary: %s", ex_string)
 
     dictionarey_from_ex_string = all_exe_dict[ex_string]
+    #print("new dict; ", dictionarey_from_ex_string)
     return dictionarey_from_ex_string
 
 
