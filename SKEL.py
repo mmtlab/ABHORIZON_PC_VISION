@@ -400,7 +400,9 @@ def skeletonizer(KP_global, EX_global, q, user_id):
         header_csv.append("x"+ str(nkp))
         header_csv.append("y"+ str(nkp))
     print(header_csv)
-    #all_exercise = EVA.load_all_exercise_in_RAM()
+
+    #carico tutti gli esercizi in ram
+    all_exercise = EVA.load_all_exercise_in_RAM()
     #flag for file csv generation
     inizialized_csv_file = False
     exercise_csv = ""
@@ -509,7 +511,7 @@ def skeletonizer(KP_global, EX_global, q, user_id):
                     pass
                 else:
                     ex_string = read_shared_mem_for_ex_string(EX_global.value)
-                    dictionary = EVA.ex_string_to_config_param(ex_string)
+                    dictionary = EVA.ex_string_to_config_param(ex_string,all_exercise)
                     
                     logging2.info("creating dict: %s",dictionary)
                     ID = dictionary["ID"]

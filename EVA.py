@@ -397,10 +397,7 @@ def dictionary_string_2_machine_param(value):
     #print(string2value)
     return string2value
 
-
-
-def ex_string_to_config_param(ex_string):
-    logging3.info("string: %s", ex_string)
+def ex_string_to_config_param(ex_string, all_exe_dict):
     """
     convert the ex string to a dictionary with all the config instrunctions
     check also if there are missing paramers, and subsitute it with default value
@@ -409,6 +406,20 @@ def ex_string_to_config_param(ex_string):
     :param ex_string: the exercise string identifing the exercise
     :return: the dictionary associated to the exercise
     """
+    logging3.info("string to claim dictionary: %s", ex_string)
+
+    dictionarey_from_ex_string = all_exe_dict[ex_string]
+    return dictionarey_from_ex_string
+
+
+
+
+
+"""
+
+def ex_string_to_config_param(ex_string):
+    logging3.info("string: %s", ex_string)
+
     # take all info of the exercise from the config files, write on a dictionary
     # read from ex_info
     config = configparser.ConfigParser()
@@ -548,7 +559,7 @@ def ex_string_to_config_param(ex_string):
 
 
 
-
+"""
 def wait_for_keypoints(queuekp):
     """
     function in loop stucked until new keypoints are aviable in the multiprocessing queue
@@ -1038,8 +1049,9 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
     logging3.info("ID of process running evaluator: {}".format(os.getpid()))
 
 
-    #the user for data saving
-    #all_exercise = load_all_exercise_in_RAM()
+    #carico in ram tutti gli esercizi
+    all_exercise = load_all_exercise_in_RAM()
+    # the user for data saving
     user = user_id.value
 
     # time.sleep(3)
@@ -1169,7 +1181,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
                 if bool(config_param_dictionary):
                     pass
                 else:
-                    config_param_dictionary = ex_string_to_config_param(ex_string)
+                    config_param_dictionary = ex_string_to_config_param(ex_string,all_exercise)
 
                 kp, presence = wait_for_keypoints(q)
                 #print("people is presence?:",presence)
