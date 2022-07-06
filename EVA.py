@@ -309,7 +309,7 @@ def ex_string_to_ID(ex_string):
             ID = int(default_dictionary_control(ID, 'ID',config))
             
             return ID
-        
+    #se non e corretta la stringa inviata dal coordinator switcho di default
     ex_string = "default" #se durante il ciclo for non c e match
     ID = ex_string_to_ID(ex_string) #se ex_string non riconosciuta prendo quela di default
     logging3.warning("not recognised exercise- switching to default...")
@@ -409,7 +409,8 @@ def ex_string_to_config_param(ex_string, all_exe_dict):
     logging3.info("string to claim dictionary: %s", ex_string)
 
     dictionarey_from_ex_string = all_exe_dict[ex_string]
-    #print("new dict; ", dictionarey_from_ex_string)
+    #print("new dict; ",ex_string, dictionarey_from_ex_string)
+
     return dictionarey_from_ex_string
 
 
@@ -642,11 +643,11 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
             elif Vx <= -threshold_count:
                 if stage[hand] == "load":
                     # count[hand] +=1
-                    print("to release")
+                    #print("to release")
                     stage[hand] = "release"
             elif Vx <= threshold_count/2 and Vx >= -threshold_count/2:
                 if stage[hand] == "release":
-                    print("to count...")
+                    #print("to count...")
                     # count[hand] +=1
                     to_count[hand] = True
                     stage[hand] = "terminated_count"
@@ -667,7 +668,7 @@ def kp_geometry_analisys_v2(eval_data, kp_history, dictionary, stage,retro_filte
                 count[1] = 1
 
                
-                print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
+                #print("COUNTED!!! : ", stage, eval_data[2], eval_data[3])
 
         # print("||||__________|||||:",eval_data[2], eval_data[3], count, stage)
 
