@@ -18,7 +18,7 @@ def main():
 
     ip = '127.0.0.1'
 
-    status = ["pulls_apa$rt ", "start ", "stop ", "pulls_apart ", "start ", "stop "]
+    status = ["lat_pull_down_supinated_grip ", "start ", "stop ", "pulls_apart ", "start ", "stop "]
     port = 21001
     print("sending config: IP = {}, PORT = {}. ".format(ip, port))
 

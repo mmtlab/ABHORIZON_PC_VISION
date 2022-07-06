@@ -159,12 +159,29 @@ def load_all_exercise_in_RAM():
 
         # print("dictionary : {}".format(dictionary))
         for key, value in dictionary.items():
+            #print("_", key, value, exercise)
             # print(key, '\t', value)
 
             if isinstance(value, list):
                 if all(isinstance(s, str) for s in value):
+                    #print("checkP1")
                     num_value = dictionary_string_2_machine_param(value)
-                    dictionary[key] = num_value
+                    #print("_", num_value, key, value, exercise)
+                    if num_value == "":
+
+                        #value è l'elemento sbagliato
+                        #lo prendo nuovo dal default e glielo do in pasto al traduttore uomo macchina
+                        new_value = config.get('default', key)
+
+                        new_value = new_value.split(",")
+
+                        num_new_value = dictionary_string_2_machine_param(new_value)
+
+
+
+                        dictionary[key] = num_new_value
+                    else:
+                        dictionary[key] = num_value
 
         all_exercise[exercise] = dictionary
 
@@ -211,7 +228,7 @@ def default_dictionary_control(parameter,descriptor, configurator):
         #config.read('exercise_info.ini')
         #print("--- %s seconds ---" % (time.time() - start_time), descriptor)
         parameter = configurator.get('default', descriptor)
-        logging3.warning("missing parameter automaticcally selected the default one:%s", descriptor)
+        logging3.debug("missing parameter automaticcally selected the default one:%s", descriptor)
 
         return parameter
     return parameter
@@ -341,35 +358,9 @@ def ID_to_ex_string(ID):
     ex_string = "0"
     return ex_string
 
-'''
-def KP_to_render_from_config_file(dictionary):
-    """
-    function description
 
-    :param param1: description of param1
-    :param param2: description of param2
-    :return: description of the function output
-    """
-    # extract the Kps of the exercise fron the ini file
-    config_geometrical = configparser.ConfigParser()
 
-    config_geometrical.read('config.ini')
-    KPS_to_render = []
-    # print(type(dictionary["segments"]))
-    # print(type(dictionary["eva_range"]))
-    for limb in dictionary["segments"]:
-        # print("analizing arto: {}".format(arto))
 
-        kps = config_geometrical["ALIAS"][limb]
-
-        kps = [int(x) for x in kps.split(",")]
-        KPS_to_render.append(kps)
-    dictionary["KPS_to_render"] = KPS_to_render
-
-    # print(dictionary)
-    return dictionary
-
-'''
 
 def dictionary_string_2_machine_param(value):
     """
@@ -384,18 +375,24 @@ def dictionary_string_2_machine_param(value):
 
     config_geometrical.read('config.ini')
     string2value = []
+    try:
+    #for arm_l in [arm_l, arm_r]
+        for bodyframe in value:
+            #togli gli spazi
 
+            kps = config_geometrical["ALIAS"][bodyframe.replace(" ", "")]
+            kps = [int(x) for x in kps.split(",")]
+            string2value.append(kps)
+        return string2value
 
-    for bodyframe in value:
-        #togli gli spazi
-        kps = config_geometrical["ALIAS"][bodyframe.replace(" ", "")]
+    except:
 
-        kps = [int(x) for x in kps.split(",")]
-        string2value.append(kps)
+        logging3.warning("this paremeter is unrecognized(error) %s , switch to default",value)
+        return ""
 
 
     #print(string2value)
-    return string2value
+
 
 def ex_string_to_config_param(ex_string, all_exe_dict):
     """
@@ -409,7 +406,7 @@ def ex_string_to_config_param(ex_string, all_exe_dict):
     logging3.info("string to claim dictionary: %s", ex_string)
 
     dictionarey_from_ex_string = all_exe_dict[ex_string]
-    #print("new dict; ",ex_string, dictionarey_from_ex_string)
+    print("new dict; ",ex_string, dictionarey_from_ex_string)
 
     return dictionarey_from_ex_string
 
