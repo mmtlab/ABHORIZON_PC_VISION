@@ -229,6 +229,12 @@ def check_new_exercise_in_excel_file():
             else:
                 config.set(exercise[k], 'motor', str(int(motor[k])))
 
+            if segments_to_render[k] == '':
+                config.set(exercise[k], 'segments_to_render', '')
+                # print("empty id")
+            else:
+                config.set(exercise[k], 'segments_to_render', str(segments_to_render[k]))
+
 
 
 
