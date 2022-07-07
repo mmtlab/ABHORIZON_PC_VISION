@@ -454,7 +454,8 @@ def skeletonizer(KP_global, EX_global, q, user_id):
 
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
-        logging2.info("frame dimension: {}".format([frame_width2, frame_height2]))
+        logging2.info("frame dimension: %",frame_width2)
+        logging2.info("frame dimension: %", frame_height2)
 
         frame_width1 = int(cap1.get(3))
         frame_height1 = int(cap1.get(4))
@@ -464,7 +465,8 @@ def skeletonizer(KP_global, EX_global, q, user_id):
         cap = cv2.VideoCapture(camera_index[0])
         frame_width2 = int(cap.get(3))
         frame_height2 = int(cap.get(4))
-        logging2.info("frame dimension: {}".format(frame_width2, frame_height2))
+        logging2.info("frame dimension: %",frame_width2)
+        logging2.info("frame dimension: %", frame_height2)
 
 
     else:
