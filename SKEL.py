@@ -415,7 +415,7 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
     # corpo del codice con ini camere e rete neurale
     # printing process id
     #inizializing parameters for the exercise and com
-    logging2.info("ID of process running worker1: {}".format(os.getpid()))
+    logging2.info("ID of process SKEL: {}".format(os.getpid()))
     dictionary = {}
     ID = 0
     camera = 0
@@ -469,6 +469,7 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
         frame_height2 = int(cap.get(4))
         logging2.info("frame dimension: %s",frame_width2)
         logging2.info("frame dimension: %s", frame_height2)
+        dual_camera.value = 0
 
 
     else:
@@ -663,8 +664,7 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                     #scrivo su csv
                     
                     # print("rendering...")
-                    while not q.empty():
-                        bit = q.get()
+
 
                     kp = landmarks2KP(results.pose_landmarks, sti)
                     sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
@@ -679,8 +679,9 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                         else:
                             write_data_csv(exercise_csv,time_csv,kp)
                         
-                    # print("kp : ",kp)
-
+                # print("kp : ",kp)
+                while not q.empty():
+                    bit = q.get()
                 if q.full():
                     logging2.error("impossible to insert data in full queue")
                 else:

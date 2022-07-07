@@ -30,7 +30,12 @@ logging1.info(".............................................")
 logging1.info("____!!!!!!!_____starting BOOSE time____!!!!!!!_____: %s",datetime.now())
 logging1.info(".............................................")
 
-def supervisor(process_ids):
+def dual_camera_inspector(dual_camera):
+    print("dual camera", dual_camera.value)
+
+
+
+def supervisor(process_ids, dual_camera):
     kill_signal = False
     
     process_name = "abh_gui"
@@ -44,6 +49,8 @@ def supervisor(process_ids):
             
     while 1:
         time.sleep(0.1)
+
+
         if kill_signal == False:
         
             try:
@@ -213,7 +220,7 @@ def main():
         logging1.info("process appended: %s",process_ids)
         
         
-        p4 = multiprocessing.Process(target=supervisor, args=(process_ids,))
+        p4 = multiprocessing.Process(target=supervisor, args=(process_ids,dual_camera))
         p4.start()
         logging1.info("supervisor started:%s",p4.pid)
 
