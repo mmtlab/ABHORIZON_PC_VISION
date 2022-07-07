@@ -680,6 +680,7 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                             write_data_csv(exercise_csv,time_csv,kp)
                         
                 # print("kp : ",kp)
+                print(q.qsize())
                 while not q.empty():
                     bit = q.get()
                 if q.full():
