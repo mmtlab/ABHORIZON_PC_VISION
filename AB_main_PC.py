@@ -258,4 +258,4 @@ try:
     main()
 except KeyboardInterrupt:
     logging1.warning('AB_main_PC Killed by user, exiting...(KeyboardInterrupt)')
-    sys.exit(0)
+    #sys.exit(0)
