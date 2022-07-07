@@ -64,7 +64,9 @@ def supervisor(process_ids):
                 
                 #os.kill(pid, signal.SIGTERM) #funziona ma psutil lo vede stesso
                 logging1.error("delated process: %s",pid)
-                logging1.error("is alive (should not):%s",pid,psutil.pid_exists(pid))
+                logging1.error("is alive (should not):%s",psutil.pid_exists(pid))
+                logging1.error("is alive (should not):%s",pid)
+
             else:
                 if psutil.pid_exists(pid):
                      logging1.debug("OK pid %d exists" % pid)
@@ -112,6 +114,9 @@ def main():
         user_id = multiprocessing.Value("i", 0)
         exercise_string = multiprocessing.Value("i", 0) #(id esercizio)
         ex_count = multiprocessing.Value("i", 0)
+
+        #flag per la gestione degli errori camera
+        dual_camera = multiprocessing.Value("i", 1)
         
         #reading new exercise
         
@@ -184,7 +189,7 @@ def main():
         # creating processes
         #LIFO queue 1, gli interessa solo dell ultimo elemento prodotto dallo skeletonizzatore
 
-        p1 = multiprocessing.Process(target=SKEL.skeletonizer, args=(KeyPoints, exercise_string,q,user_id))
+        p1 = multiprocessing.Process(target=SKEL.skeletonizer, args=(KeyPoints, exercise_string,q,user_id,dual_camera))
         p2 = multiprocessing.Process(target=EVA.evaluator, args=(exercise_string,q,string_from_tcp_ID,user_id))
         # nota: se ho un solo argomento e questo e' una stringa, devo passarlo
         # con una virgola per fargli capire che e' un elemento e non n, cioe'

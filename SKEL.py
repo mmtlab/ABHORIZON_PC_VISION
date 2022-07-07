@@ -387,7 +387,7 @@ def landmarks2KP(landmarks, image):
     return kpp
 
 
-def skeletonizer(KP_global, EX_global, q, user_id):
+def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
     """
     Main function of the skeletonizer, perform camera management, neural network detection, rendering, and image streaming
     :param EX_global: ID of the current exercise/state saved in the multiprocessing memory
