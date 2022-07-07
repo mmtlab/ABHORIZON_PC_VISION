@@ -231,7 +231,9 @@ class Undistorter:
 
             h, w = img.shape[:2]
             map1180, map2180 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-            logging2.info("DONE! completed map1 and 2, dim = %s", map1180.shape, map2180.shape)
+            logging2.info("DONE! completed map1 and 2, dim1 = %s", map1180.shape)
+            logging2.info("DONE! completed map1 and 2, dim2 = %s", map2180.shape)
+
 
             if map1180 is None or map2180 is None:
                 logging2.error("ERROR no map calculated")
