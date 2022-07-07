@@ -700,6 +700,8 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
 
 
             # invio streaming
+            if sti is None:
+                logging2.error("no image ERRORRRR")
             fs.udp_frame(sti)
 
             # sender.send_status(5002, "KP_success")
