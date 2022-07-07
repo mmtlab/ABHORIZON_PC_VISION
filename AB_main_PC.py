@@ -7,6 +7,7 @@ import signal
 import logging
 from datetime import datetime
 
+
 import sender
 import configparser
 import EVA
@@ -36,7 +37,8 @@ def supervisor(process_ids):
     for proc in psutil.process_iter():
         if process_name in proc.name():
            pid_coordinator = proc.pid
-           logging1.info("coordinator with name and pid:",process_name, pid_coordinator)
+           logging1.info("coordinator with name %s",process_name)
+           logging1.info("coordinator with PID %s", pid_coordinator)
         
             
             
