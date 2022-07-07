@@ -49,7 +49,7 @@ def load_all_exercise_in_RAM():
         try:
             segments_to_render = config.get(exercise, 'segments_to_render')
         except:
-            logging3.warning("missing line of config, switch to default segments_to_render")
+            logging3.debug("missing line of config, switch to default segments_to_render")
             segments_to_render = config.get("default", 'segments_to_render')
         segments_to_render = default_dictionary_control(segments_to_render, 'segments_to_render',config)
         segments_to_render = segments_to_render.split(',')
@@ -57,7 +57,7 @@ def load_all_exercise_in_RAM():
         try:
             joints_to_evaluate = config.get(exercise, 'joints_to_evaluate')
         except:
-            logging3.warning("missing line of config, switch to default joints_to_evaluate")
+            logging3.debug("missing line of config, switch to default joints_to_evaluate")
             joints_to_evaluate = config.get("default", 'joints_to_evaluate')
         joints_to_evaluate = default_dictionary_control(joints_to_evaluate, 'joints_to_evaluate',config)
         joints_to_evaluate = joints_to_evaluate.split(',')
@@ -65,7 +65,7 @@ def load_all_exercise_in_RAM():
         try:
             evaluation_range = config.get(exercise, 'evaluation_range')
         except:
-            logging3.warning("missing line of config, switch to default evaluation_range")
+            logging3.debug("missing line of config, switch to default evaluation_range")
             evaluation_range = config.get("default", 'evaluation_range')
         evaluation_range = default_dictionary_control(evaluation_range, 'evaluation_range',config)
         evaluation_range = [int(x) for x in evaluation_range.split(",")]
@@ -80,7 +80,7 @@ def load_all_exercise_in_RAM():
         try:
             joints_with_ropes = config.get(exercise, 'joints_with_ropes')
         except:
-            logging3.warning("missing line of config, switch to default joints_with_ropes")
+            logging3.debug("missing line of config, switch to default joints_with_ropes")
             joints_with_ropes = config.get("default", 'joints_with_ropes')
         joints_with_ropes = default_dictionary_control(joints_with_ropes, 'joints_with_ropes',config)
         joints_with_ropes = joints_with_ropes.split(',')
@@ -96,28 +96,28 @@ def load_all_exercise_in_RAM():
         try:
             threshold = config.get(exercise, 'threshold')
         except:
-            logging3.warning("missing line of config, switch to default threshold")
+            logging3.debug("missing line of config, switch to default threshold")
             threshold = config.get("default", 'threshold')
         threshold = int(default_dictionary_control(threshold, 'threshold',config))
 
         try:
             motor_history_events = config.get(exercise, 'motor_history_events')
         except:
-            logging3.warning("missing line of config, switch to default motor_history_events")
+            logging3.debug("missing line of config, switch to default motor_history_events")
             motor_history_events = config.get("default", 'motor_history_events')
         motor_history_events = int(default_dictionary_control(motor_history_events, 'motor_history_events',config))
 
         try:
             threshold_count = config.get(exercise, 'threshold_count')
         except:
-            logging3.warning("missing line of config, switch to default threshold_count")
+            logging3.debug("missing line of config, switch to default threshold_count")
             threshold_count = config.get("default", 'threshold_count')
         threshold_count = int(default_dictionary_control(threshold_count, 'threshold_count',config))
 
         try:
             HISTERESYS = config.get(exercise, 'histeresys')
         except:
-            logging3.warning("missing line of config, switch to default histeresys")
+            logging3.debug("missing line of config, switch to default histeresys")
             HISTERESYS = config.get("default", 'histeresys')
         HISTERESYS = (int(default_dictionary_control(HISTERESYS, 'histeresys',config))) / 100
         # print("joints and target : ", joints_target)
@@ -125,7 +125,7 @@ def load_all_exercise_in_RAM():
         try:
             camera = config.get(exercise, 'camera')
         except:
-            logging3.warning("missing line of config, switch to default camera")
+            logging3.debug("missing line of config, switch to default camera")
             camera = config.get("default", 'camera')  # changes done
         camera = int(default_dictionary_control(camera, 'camera',config))
 
@@ -134,7 +134,7 @@ def load_all_exercise_in_RAM():
             motor = config.get(exercise, 'motor')
 
         except:
-            logging3.warning("missing line of config, switch to default motor")
+            logging3.debug("missing line of config, switch to default motor")
             motor = config.get("default", 'motor')  # changes done
 
         motor = int(default_dictionary_control(motor, 'motor',config))
