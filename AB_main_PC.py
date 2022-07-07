@@ -80,6 +80,7 @@ def supervisor(process_ids, dual_camera):
                     #process = psutil.Process(pid)
                 else:
                     logging1.error(" pid %d does not exist ERROR!" % pid)
+                    logging1.error(" time of death %d " % datetime.now())
                     process_ids.remove(pid)
                     kill_signal= True
         
