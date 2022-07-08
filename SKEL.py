@@ -509,30 +509,34 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
         while cap.isOpened():
             if printing_FPS == True:
                 start = time.time()
-           
-            if EX_global.value != 0:
-                if bool(dictionary):
-                    #print("dict ok")
-                    pass
+            try:
+                if EX_global.value != 0:
+                    if bool(dictionary):
+                        #print("dict ok")
+                        pass
+                    else:
+
+                        ex_string = read_shared_mem_for_ex_string(EX_global.value)
+                        dictionary = EVA.ex_string_to_config_param(ex_string,all_exercise)
+
+                        logging2.info("creating dict: %s",dictionary)
+                        ID = dictionary["ID"]
+                        camera = int(dictionary["camera"])
+                        logging2.info("EXERCISE ID: %s ", ID)
+                        logging2.info("EXERCISE camera: %s ", camera)
+                        continue
+
+
+
+
                 else:
-                    ex_string = read_shared_mem_for_ex_string(EX_global.value)
-                    dictionary = EVA.ex_string_to_config_param(ex_string,all_exercise)
-                    
-                    logging2.info("creating dict: %s",dictionary)
-                    ID = dictionary["ID"]
-                    camera = int(dictionary["camera"])
-                    logging2.info("EXERCISE ID: %s ", ID)
-                    logging2.info("EXERCISE camera: %s ", camera)
-                    continue
+                    dictionary = {}
+                    ex_string = ""
+                    ID = 0
+                    camera = 0
+            except:
+                logging2.error("error during handling exercise configuration skel, string or value corrupted")
 
-
-
-
-            else:
-                dictionary = {}
-                ex_string = ""
-                ID = 0
-                camera = 0
             #print("id", ID)
             # image=undistort(image)
             # image1=undistort(image1)
@@ -704,7 +708,10 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
             # invio streaming
             if sti is None:
                 logging2.error("no image ERRORRRR")
-            fs.udp_frame(sti)
+            try:
+                fs.udp_frame(sti)
+            except:
+                logging2.error("error to update frame streaming")
 
             # sender.send_status(5002, "KP_success")
             # print("udp completed img")
