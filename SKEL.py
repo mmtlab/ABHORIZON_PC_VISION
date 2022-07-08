@@ -396,358 +396,363 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
 
     :return: nothing
     """
-    #header csv file generation
-    header_csv = []
-    for nkp in range(13):
-        header_csv.append("x"+ str(nkp))
-        header_csv.append("y"+ str(nkp))
-    print(header_csv)
+    try:
+        #header csv file generation
+        header_csv = []
+        for nkp in range(13):
+            header_csv.append("x"+ str(nkp))
+            header_csv.append("y"+ str(nkp))
+        print(header_csv)
 
-    #carico tutti gli esercizi in ram
-    all_exercise = EVA.load_all_exercise_in_RAM()
-    #flag for file csv generation
-    inizialized_csv_file = False
-    exercise_csv = ""
-    time_csv = ""
-    #user, dati dell utente, identificativo
-    user = user_id.value
-    
-    # corpo del codice con ini camere e rete neurale
-    # printing process id
-    #inizializing parameters for the exercise and com
-    logging2.info("ID of process SKEL: {}".format(os.getpid()))
-    dictionary = {}
-    ID = 0
-    camera = 0
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    port = 5000
-    fs = sender.FrameSegment(s, port)
-    # stitcher serve per fondere due immagini da due camere
-    logging2.info("try creating undistorter...")
-    undistorter = Undistorter()
-    camera_index = returnCameraIndexes()
-    logging2.info("length camera index : %s", len(camera_index))
-    if len(camera_index) == 2:
-        logging2.info("2 camera system")
-        try:
-            cap = cv2.VideoCapture(camera_index[camera_index_primary])
-            logging2.info("primary camera connected, CAP ok")
+        #carico tutti gli esercizi in ram
+        all_exercise = EVA.load_all_exercise_in_RAM()
+        #flag for file csv generation
+        inizialized_csv_file = False
+        exercise_csv = ""
+        time_csv = ""
+        #user, dati dell utente, identificativo
+        user = user_id.value
 
-        except:
-            logging2.info("primary camera index ERROR")
-            
-        if real_time_camera == True:
-            try:
-                cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
-                logging2.info("secondary camera OK -inizialized cap-(LOW) (secondary sensor)")
-            except:
-                logging2.info("ERROR SECONDARY CAMERA _ LOW _CAM _ CAP _ ERROR)")
-
-                
-        else:
-            try:
-                path = "/home/abhorizon/ABHORIZON_PC_VISION/data/old_test/video_subject_z_ex_1.avi"
-                cap1 = cv2.VideoCapture(path)
-                logging2.info("video for offline evaluation : %s",path)
-            except:
-                logging2.error("video file not valid or not present in path: %s",path)
-
-                    
-
-        frame_width2 = int(cap.get(3))
-        frame_height2 = int(cap.get(4))
-        logging2.info("frame dimension: %s",frame_width2)
-        logging2.info("frame dimension: %s", frame_height2)
-
-        frame_width1 = int(cap1.get(3))
-        frame_height1 = int(cap1.get(4))
-
-    elif len(camera_index) == 1:
-        logging2.error("ERROR 1 camera system")
-        cap = cv2.VideoCapture(camera_index[0])
-        frame_width2 = int(cap.get(3))
-        frame_height2 = int(cap.get(4))
-        logging2.info("frame dimension: %s",frame_width2)
-        logging2.info("frame dimension: %s", frame_height2)
-        dual_camera.value = 0
-
-
-    else:
-        logging2.error("not enough camera aviable: camera numer = %s", len(camera_index))
-        return 0
-    if recording == True:
-        out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 30,
-                          (frame_height1, frame_width1))
-
-    # cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER)
-
-    # cap1 = cv2.VideoCapture(gst_str2, cv2.CAP_GSTREAMER)
-
-    # print("now i show you")
-
-    # frame_width = int(cap1.get(3))
-    # frame_height = int(cap1.get(4))*2
-
-    mp_drawing = mp.solutions.drawing_utils
-    mp_pose = mp.solutions.pose
-    logging2.info("start pose config")
-    with mp_pose.Pose(
-            static_image_mode=False,  # false for prediction
-            model_complexity=model,
-            smooth_landmarks=True,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.6) as pose:
-        logging2.info("start loop")
-
+        # corpo del codice con ini camere e rete neurale
+        # printing process id
+        #inizializing parameters for the exercise and com
+        logging2.info("ID of process SKEL: {}".format(os.getpid()))
+        dictionary = {}
+        ID = 0
+        camera = 0
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        port = 5000
+        fs = sender.FrameSegment(s, port)
+        # stitcher serve per fondere due immagini da due camere
+        logging2.info("try creating undistorter...")
+        undistorter = Undistorter()
+        camera_index = returnCameraIndexes()
+        logging2.info("length camera index : %s", len(camera_index))
         if len(camera_index) == 2:
-            logging2.info("is cap0 opened ?:%s ", cap.isOpened())
-            logging2.info("is cap1 opened ?:%s ", cap1.isOpened())
+            logging2.info("2 camera system")
+            try:
+                cap = cv2.VideoCapture(camera_index[camera_index_primary])
+                logging2.info("primary camera connected, CAP ok")
+
+            except:
+                logging2.info("primary camera index ERROR")
+
+            if real_time_camera == True:
+                try:
+                    cap1 = cv2.VideoCapture(camera_index[camera_index_secondary])
+                    logging2.info("secondary camera OK -inizialized cap-(LOW) (secondary sensor)")
+                except:
+                    logging2.info("ERROR SECONDARY CAMERA _ LOW _CAM _ CAP _ ERROR)")
+
+
+            else:
+                try:
+                    path = "/home/abhorizon/ABHORIZON_PC_VISION/data/old_test/video_subject_z_ex_1.avi"
+                    cap1 = cv2.VideoCapture(path)
+                    logging2.info("video for offline evaluation : %s",path)
+                except:
+                    logging2.error("video file not valid or not present in path: %s",path)
+
+
+
+            frame_width2 = int(cap.get(3))
+            frame_height2 = int(cap.get(4))
+            logging2.info("frame dimension: %s",frame_width2)
+            logging2.info("frame dimension: %s", frame_height2)
+
+            frame_width1 = int(cap1.get(3))
+            frame_height1 = int(cap1.get(4))
 
         elif len(camera_index) == 1:
-            logging2.info("is cap0 opened ?:%s ", cap.isOpened())
-
-        while cap.isOpened():
-            if printing_FPS == True:
-                start = time.time()
-            try:
-                if EX_global.value != 0:
-                    if bool(dictionary):
-                        #print("dict ok")
-                        pass
-                    else:
-
-                        ex_string = read_shared_mem_for_ex_string(EX_global.value)
-                        dictionary = EVA.ex_string_to_config_param(ex_string,all_exercise)
-
-                        logging2.info("creating dict: %s",dictionary)
-                        ID = dictionary["ID"]
-                        camera = int(dictionary["camera"])
-                        logging2.info("EXERCISE ID: %s ", ID)
-                        logging2.info("EXERCISE camera: %s ", camera)
-                        continue
+            logging2.error("ERROR 1 camera system")
+            cap = cv2.VideoCapture(camera_index[0])
+            frame_width2 = int(cap.get(3))
+            frame_height2 = int(cap.get(4))
+            logging2.info("frame dimension: %s",frame_width2)
+            logging2.info("frame dimension: %s", frame_height2)
+            dual_camera.value = 0
 
 
+        else:
+            logging2.error("not enough camera aviable: camera numer = %s", len(camera_index))
+            return 0
+        if recording == True:
+            out = cv2.VideoWriter('./data/video_subject_n_ex_m.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 30,
+                              (frame_height1, frame_width1))
 
+        # cap = cv2.VideoCapture(gst_str1, cv2.CAP_GSTREAMER)
 
-                else:
-                    dictionary = {}
-                    ex_string = ""
-                    ID = 0
-                    camera = 0
-            except:
-                logging2.error("error during handling exercise configuration skel, string or value corrupted")
+        # cap1 = cv2.VideoCapture(gst_str2, cv2.CAP_GSTREAMER)
 
-            #print("id", ID)
-            # image=undistort(image)
-            # image1=undistort(image1)
-            # print("read image succes")
-            
-            
+        # print("now i show you")
+
+        # frame_width = int(cap1.get(3))
+        # frame_height = int(cap1.get(4))*2
+
+        mp_drawing = mp.solutions.drawing_utils
+        mp_pose = mp.solutions.pose
+        logging2.info("start pose config")
+        with mp_pose.Pose(
+                static_image_mode=False,  # false for prediction
+                model_complexity=model,
+                smooth_landmarks=True,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.6) as pose:
+            logging2.info("start loop")
+
             if len(camera_index) == 2:
-                if camera < 2:
-                    try:
-                        success, image = cap1.read()  #capture low camera
-                    except:
-                        logging2.error("error loading image from cap:", cap1)
-                    if camera == 1:
-                        #logging2.info("correction of distortion")
+                logging2.info("is cap0 opened ?:%s ", cap.isOpened())
+                logging2.info("is cap1 opened ?:%s ", cap1.isOpened())
+
+            elif len(camera_index) == 1:
+                logging2.info("is cap0 opened ?:%s ", cap.isOpened())
+
+            while cap.isOpened():
+                if printing_FPS == True:
+                    start = time.time()
+                try:
+                    if EX_global.value != 0:
+                        if bool(dictionary):
+                            #print("dict ok")
+                            pass
+                        else:
+
+                            ex_string = read_shared_mem_for_ex_string(EX_global.value)
+                            dictionary = EVA.ex_string_to_config_param(ex_string,all_exercise)
+
+                            logging2.info("creating dict: %s",dictionary)
+                            ID = dictionary["ID"]
+                            camera = int(dictionary["camera"])
+                            logging2.info("EXERCISE ID: %s ", ID)
+                            logging2.info("EXERCISE camera: %s ", camera)
+                            continue
+
+
+
+
+                    else:
+                        dictionary = {}
+                        ex_string = ""
+                        ID = 0
+                        camera = 0
+                except:
+                    logging2.error("error during handling exercise configuration skel, string or value corrupted")
+
+                #print("id", ID)
+                # image=undistort(image)
+                # image1=undistort(image1)
+                # print("read image succes")
+
+
+                if len(camera_index) == 2:
+                    if camera < 2:
+                        try:
+                            success, image = cap1.read()  #capture low camera
+                        except:
+                            logging2.error("error loading image from cap:", cap1)
+                        if camera == 1:
+                            #logging2.info("correction of distortion")
+                            if real_time_camera == True:
+                                image = undistorter.undistortOPT180(image) #correct distortion
+                            pass
                         if real_time_camera == True:
-                            image = undistorter.undistortOPT180(image) #correct distortion
-                        pass
-                    if real_time_camera == True:
+                            image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+                            image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
+                            #print("___________co0rrs")
+                            #mantengo comunque l undistorted che mi puo servire per il rendering e basta
+                            stiched = undistorter.undistortOPT180(image)  # correct distortion
+
+                    else:
+                        success, image = cap.read()
+
+                        # image=undistort(image)
+                        image = undistorter.undistortOPT(image)
                         image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-                        image = cv2.rotate(image, cv2.ROTATE_180) #da ripristinare 3 righe
-                        #print("___________co0rrs")
-                        #mantengo comunque l undistorted che mi puo servire per il rendering e basta
-                        stiched = undistorter.undistortOPT180(image)  # correct distortion
+                        # image = cv2.rotate(image,cv2.ROTATE_180)
 
                 else:
                     success, image = cap.read()
+                    #image = undistorter.undistortOPT(image)
+                    #image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
-                    # image=undistort(image)
-                    image = undistorter.undistortOPT(image)
-                    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-                    # image = cv2.rotate(image,cv2.ROTATE_180)
-
-            else:
-                success, image = cap.read()
-                #image = undistorter.undistortOPT(image)
-                #image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-
-            # image = image[180:frame_width1, 70:frame_height1-70]
+                # image = image[180:frame_width1, 70:frame_height1-70]
 
 
-            if not success:
-                logging2.error("Ignoring empty camera0 frame.")
-                # If loading a video, use 'break' instead of 'continue'.
-                return False
-            if len(camera_index) == 2:
                 if not success:
-                    logging2.error("Ignoring empty camera2 frame.")
+                    logging2.error("Ignoring empty camera0 frame.")
+                    # If loading a video, use 'break' instead of 'continue'.
                     return False
-                    # image = cv2.rotate(image,cv2.ROTATE_180)
-            # image1 = cv2.rotate(image1,cv2.ROTATE_180)
+                if len(camera_index) == 2:
+                    if not success:
+                        logging2.error("Ignoring empty camera2 frame.")
+                        return False
+                        # image = cv2.rotate(image,cv2.ROTATE_180)
+                # image1 = cv2.rotate(image1,cv2.ROTATE_180)
 
-            # due tipi di stichetr diversi quado le camere saranno montate stai pronto e usane uno.
-            '''
-
-            #stitcher = cv2.createStitcher(False)
-            #sti = stitcher.stitch((image,image1))
-
-            '''
-          
-            if len(camera_index) == 2:
-                
-                sti = image
-               
-            else:
-                sti = image
-                # sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
-
-            alpha = 4
-            beta = 12
-            # sti = cv2.convertScaleAbs(sti, alpha=5, beta=2)
-            # if brightness(sti) < 80:
-            # print(brightness(sti))
-            # sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
-
-            sti = cv2.flip(sti, 1)
-
-            if sti is None:
-                logging2.error("image null")
-                break
-
-            # cv2.imshow('MediaPipeconc', conc)
-
-            # assert status == 0 # Verify returned status is 'success'
-
-            # render in front of ex_string
-            if ex_string == "":
-                if inizialized_csv_file == True:
-                    inizialized_csv_file = False
-                    logging2.critical("no string in skel --> ergo stop signal from coordinator")
-
-            else:
-                            # To improve performance, optionally mark the image as not writeable to
-                # pass by reference.
-                if recording == True:
-                    out.write(sti)
-                sti.flags.writeable = False
-                # end1 = time.time()
-                # seconds1 = end1 - start
-                #
-                if printing_FPS == True:
-                    end_pre_proc = time.time()
-                    seconds_pre_proc = end_pre_proc - start
-
-                # start2 = time.time()
-                results = pose.process(sti)
-                # end2 = time.time()
-                # seconds2 = end2 - start2
-                # print("p", results.pose_landmarks)
-
-                # start3 = time.time()
-                if printing_FPS == True:
-                    start_post_proc = time.time()
-
-                # Draw the pose annotation on the image.
-                sti.flags.writeable = True
-                # sti = cv2.cvtColor(sti, cv2.COLOR_RGB2BGR)
-
-                # Render detections
-
+                # due tipi di stichetr diversi quado le camere saranno montate stai pronto e usane uno.
                 '''
-                mp_drawing.draw_landmarks(sti, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                          mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
-                                          mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
-                                          )
+        
+                #stitcher = cv2.createStitcher(False)
+                #sti = stitcher.stitch((image,image1))
+        
                 '''
-                # converting LM to KP
-                if results.pose_landmarks is None:
-                    kp = 0
+
+                if len(camera_index) == 2:
+
+                    sti = image
 
                 else:
-                    #svuoto queue
-                    #scrivo su csv
-                    
-                    # print("rendering...")
+                    sti = image
+                    # sti = cv2.rotate(sti,cv2.ROTATE_90_CLOCKWISE)
 
+                alpha = 4
+                beta = 12
+                # sti = cv2.convertScaleAbs(sti, alpha=5, beta=2)
+                # if brightness(sti) < 80:
+                # print(brightness(sti))
+                # sti = cv2.convertScaleAbs(sti, alpha=alpha, beta=beta)
 
-                    kp = landmarks2KP(results.pose_landmarks, sti)
-                    try:
-                        sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
-                    except:
-                        logging2.error("error rendering data on image")
+                sti = cv2.flip(sti, 1)
 
-                    # se volessi renderizzare su immagine stichata dovro usare il seguente
-                    # stiched = rendering_kp_on_frame(dictionary["segments_to_render"],kp,stiched)
-                    if writing == True:
-                        if inizialized_csv_file == False:
-                            exercise_csv = "user_"+ str(user) + "_" + ex_string
-                            time_csv = datetime.now()
-                            write_data_csv(exercise_csv,time_csv,header_csv)
-                            inizialized_csv_file = True
-                        else:
-                            write_data_csv(exercise_csv,time_csv,kp)
-                try:
-                    while not q.empty():
-                        bit = q.get()
+                if sti is None:
+                    logging2.error("image null")
+                    break
 
-                    if q.full():
-                        logging2.error("impossible to insert data in full queue")
+                # cv2.imshow('MediaPipeconc', conc)
+
+                # assert status == 0 # Verify returned status is 'success'
+
+                # render in front of ex_string
+                if ex_string == "":
+                    if inizialized_csv_file == True:
+                        inizialized_csv_file = False
+                        logging2.critical("no string in skel --> ergo stop signal from coordinator")
+
+                else:
+                                # To improve performance, optionally mark the image as not writeable to
+                    # pass by reference.
+                    if recording == True:
+                        out.write(sti)
+                    sti.flags.writeable = False
+                    # end1 = time.time()
+                    # seconds1 = end1 - start
+                    #
+                    if printing_FPS == True:
+                        end_pre_proc = time.time()
+                        seconds_pre_proc = end_pre_proc - start
+
+                    # start2 = time.time()
+                    results = pose.process(sti)
+                    # end2 = time.time()
+                    # seconds2 = end2 - start2
+                    # print("p", results.pose_landmarks)
+
+                    # start3 = time.time()
+                    if printing_FPS == True:
+                        start_post_proc = time.time()
+
+                    # Draw the pose annotation on the image.
+                    sti.flags.writeable = True
+                    # sti = cv2.cvtColor(sti, cv2.COLOR_RGB2BGR)
+
+                    # Render detections
+
+                    '''
+                    mp_drawing.draw_landmarks(sti, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                                              mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
+                                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
+                                              )
+                    '''
+                    # converting LM to KP
+                    if results.pose_landmarks is None:
+                        kp = 0
+
                     else:
-                        q.put(kp)
+                        #svuoto queue
+                        #scrivo su csv
+
+                        # print("rendering...")
+
+
+                        kp = landmarks2KP(results.pose_landmarks, sti)
+                        try:
+                            sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
+                        except:
+                            logging2.error("error rendering data on image")
+
+                        # se volessi renderizzare su immagine stichata dovro usare il seguente
+                        # stiched = rendering_kp_on_frame(dictionary["segments_to_render"],kp,stiched)
+                        if writing == True:
+                            if inizialized_csv_file == False:
+                                exercise_csv = "user_"+ str(user) + "_" + ex_string
+                                time_csv = datetime.now()
+                                write_data_csv(exercise_csv,time_csv,header_csv)
+                                inizialized_csv_file = True
+                            else:
+                                write_data_csv(exercise_csv,time_csv,kp)
+                    try:
+                        while not q.empty():
+                            bit = q.get()
+
+                        if q.full():
+                            logging2.error("impossible to insert data in full queue")
+                        else:
+                            q.put(kp)
+                    except:
+                        logging2.error("ERROR ON all queue ")
+                        logging2.error("put keypoint error, q: %s",q)
+                        logging2.error("put keypoint error, kp: %s", kp)
+                        logging2.error("put keypoint error, size:", q.qsize())
+                        logging2.error("put keypoint error, empty?:", q.empty())
+                        logging2.error("put keypoint error, full?:", q.full())
+                        logging2.error("time", datetime.now())
+
+
+
+
+
+                    # print("KP global found : {}".format(len(KP_global)))
+
+
+
+
+
+
+                # invio streaming
+                if sti is None:
+                    logging2.error("no image ERRORRRR")
+                try:
+                    fs.udp_frame(sti)
                 except:
-                    logging2.error("ERROR ON all queue ")
-                    logging2.error("put keypoint error, q: %s",q)
-                    logging2.error("put keypoint error, kp: %s", kp)
-                    logging2.error("put keypoint error, size:", q.qsize())
-                    logging2.error("put keypoint error, empty?:", q.empty())
-                    logging2.error("put keypoint error, full?:", q.full())
-                    logging2.error("time", datetime.now())
+                    logging2.error("error to update frame streaming")
+
+                # sender.send_status(5002, "KP_success")
+                # print("udp completed img")
+
+                if len(camera_index) == 1:
+                    cv2.imshow('MediaPipe Pose', sti)
+                if showing == True:
+                    cv2.imshow('MediaPipe Pose', sti)
+                if cv2.waitKey(5) & 0xFF == 27:
+                    return False
+                if ex_string != "":
+
+                    # cv2.putText(sti, 'FPS: {}'.format(int(fps)), (200, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
+                    if printing_FPS == True:
+                        end = time.time()
+                        seconds = end - start
+                        second_post_proc = end - start_post_proc
+                        fps = 1 / seconds
+                        pose_inference_time = seconds-(seconds_pre_proc+second_post_proc)
+                        logging2.info("FPS:{}, total:{},pose:{},preproc:{},postproc:{}".format( fps, round(seconds,4) ,round(pose_inference_time,4) ,round(seconds_pre_proc,4) ,round(second_post_proc,4) ))
+            cap.release()
+            cap1.release()
+
+            out.release()
+            s.close()
+
+            cv2.destroyAllWindows()
+    except:
+        logging2.error("skel crashed __||__/")
 
 
-
-
-
-                # print("KP global found : {}".format(len(KP_global)))
-
-
-
-
-
-
-            # invio streaming
-            if sti is None:
-                logging2.error("no image ERRORRRR")
-            try:
-                fs.udp_frame(sti)
-            except:
-                logging2.error("error to update frame streaming")
-
-            # sender.send_status(5002, "KP_success")
-            # print("udp completed img")
-
-            if len(camera_index) == 1:
-                cv2.imshow('MediaPipe Pose', sti)
-            if showing == True:
-                cv2.imshow('MediaPipe Pose', sti)
-            if cv2.waitKey(5) & 0xFF == 27:
-                return False
-            if ex_string != "":
-
-                # cv2.putText(sti, 'FPS: {}'.format(int(fps)), (200, 200), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
-                if printing_FPS == True:
-                    end = time.time()
-                    seconds = end - start
-                    second_post_proc = end - start_post_proc
-                    fps = 1 / seconds
-                    pose_inference_time = seconds-(seconds_pre_proc+second_post_proc)
-                    logging2.info("FPS:{}, total:{},pose:{},preproc:{},postproc:{}".format( fps, round(seconds,4) ,round(pose_inference_time,4) ,round(seconds_pre_proc,4) ,round(second_post_proc,4) ))
-        cap.release()
-        cap1.release()
-
-        out.release()
-        s.close()
-
-        cv2.destroyAllWindows()
