@@ -671,7 +671,11 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
 
 
                     kp = landmarks2KP(results.pose_landmarks, sti)
-                    sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
+                    try:
+                        sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
+                    except:
+                        logging2.error("error rendering data on image")
+
                     # se volessi renderizzare su immagine stichata dovro usare il seguente
                     # stiched = rendering_kp_on_frame(dictionary["segments_to_render"],kp,stiched)
                     if writing == True:
@@ -682,34 +686,23 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                             inizialized_csv_file = True
                         else:
                             write_data_csv(exercise_csv,time_csv,kp)
-                        
-                # print("kp : ",kp)
 
-                try:
-
-                    while not q.empty():
-                        bit = q.get()
-                    if q.full():
-                        logging2.error("impossible to insert data in full queue")
-                    else:
-                        try:
-                            q.put(kp)
-                        except:
-                            logging2.error("ERROR ON PUT")
-                            logging2.error("put keypoint error, q: %s",q)
-                            logging2.error("put keypoint error, kp: %s", kp)
-                            logging2.error("put keypoint error, size:", q.qsize())
-                            logging2.error("put keypoint error, empty?:", q.empty())
-                            logging2.error("put keypoint error, full?:", q.full())
+                while not q.empty():
+                    bit = q.get()
+                if q.full():
+                    logging2.error("impossible to insert data in full queue")
+                else:
+                    try:
+                        q.put(kp)
+                    except:
+                        logging2.error("ERROR ON PUT")
+                        logging2.error("put keypoint error, q: %s",q)
+                        logging2.error("put keypoint error, kp: %s", kp)
+                        logging2.error("put keypoint error, size:", q.qsize())
+                        logging2.error("put keypoint error, empty?:", q.empty())
+                        logging2.error("put keypoint error, full?:", q.full())
 
 
-                except:
-                    logging2.error("error working with the queue, clearing inserting")
-                    logging2.error("put keypoint error, q: %s", q)
-                    logging2.error("put keypoint error, kp: %s", kp)
-                    logging2.error("put keypoint error, size:", q.qsize())
-                    logging2.error("put keypoint error, empty?:", q.empty())
-                    logging2.error("put keypoint error, full?:", q.full())
 
 
 
