@@ -211,7 +211,11 @@ def main():
 
         # lancio i processi uno dietro l'altro
         # starting processes
-        p1.start()
+        try:
+            p1.start()
+        except:
+            logging1.info("skel failed processing: %s", p1.pid)
+
         p2.start()
         p3.start()
         process_ids.append(os.getpid())
