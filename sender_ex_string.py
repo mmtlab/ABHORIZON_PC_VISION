@@ -18,26 +18,27 @@ def main():
 
     ip = '127.0.0.1'
 
-    status = ["lat_pull_down_supinated_grip ", "start ", "stop ", "pulls_apart ", "start ", "stop "]
+    status = ["lat_pull_down_supinated_grip ", "start "]
+    #status = ["lat_pull_down_supinated_grip ", "start ", "stop ", "pulls_apart ", "start ", "stop "]
     port = 21001
     print("sending config: IP = {}, PORT = {}. ".format(ip, port))
 
     
-    while True:
-        for i in range(len(status)):
-            ex_string_recived = status[i]
-            time.sleep(12)
 
-            BUFFER_SIZE = 1024
+    for i in range(len(status)):
+        ex_string_recived = status[i]
+        time.sleep(12)
 
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            host = socket.gethostname()  # Get the local machine name
+        BUFFER_SIZE = 1024
 
-            s.connect((ip, port))
-            s.send(ex_string_recived.encode())
-            print("sended: {}".format(ex_string_recived))
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        host = socket.gethostname()  # Get the local machine name
 
-            s.close()
+        s.connect((ip, port))
+        s.send(ex_string_recived.encode())
+        print("sended: {}".format(ex_string_recived))
+
+        s.close()
 
 
 

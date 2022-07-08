@@ -60,7 +60,7 @@ def supervisor(process_ids, dual_camera):
                     logging1.error("coordinator // AB_GUI BROKEN -> kill all, time: %s",datetime.now())
                     kill_signal = True
             except:
-                logging1.error("not found pid for coordinator, continue without it")
+                logging1.debug("not found pid for coordinator, continue without it")
             
         for pid in process_ids:
             if kill_signal == True:
