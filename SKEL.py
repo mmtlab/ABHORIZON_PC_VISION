@@ -545,7 +545,10 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
             
             if len(camera_index) == 2:
                 if camera < 2:
-                    success, image = cap1.read()  #capture low camera
+                    try:
+                        success, image = cap1.read()  #capture low camera
+                    except:
+                        logging2.error("error loading image from cap:", cap1)
                     if camera == 1:
                         #logging2.info("correction of distortion")
                         if real_time_camera == True:
@@ -693,10 +696,9 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                     if q.full():
                         logging2.error("impossible to insert data in full queue")
                     else:
-
                         q.put(kp)
                 except:
-                    logging2.error("ERROR ON all")
+                    logging2.error("ERROR ON all queue ")
                     logging2.error("put keypoint error, q: %s",q)
                     logging2.error("put keypoint error, kp: %s", kp)
                     logging2.error("put keypoint error, size:", q.qsize())
