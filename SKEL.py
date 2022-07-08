@@ -681,16 +681,18 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                         
                 # print("kp : ",kp)
 
-                while not q.empty():
-                    bit = q.get()
-                if q.full():
-                    logging2.error("impossible to insert data in full queue")
-                else:
-                    q.put(kp)
+                try:
+
+                    while not q.empty():
+                        bit = q.get()
+                    if q.full():
+                        logging2.error("impossible to insert data in full queue")
+                    else:
+                        q.put(kp)
+                except:
+                    logging2.error("error working with the queue, clearing inserting")
 
 
-
-                # print(KP_global)
 
                 # print("KP global found : {}".format(len(KP_global)))
 
