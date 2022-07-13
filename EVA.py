@@ -435,7 +435,9 @@ def wait_for_keypoints(queuekp):
 
             #trigger of missing image and kp
             #print("q empty")
+            time.sleep(0.02)
             pass
+
 
 
         return keypoints, presence
