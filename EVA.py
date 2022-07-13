@@ -293,6 +293,7 @@ def no_ex_cycle_control(string_from_tcp_ID, ex_string):
     """
     while ex_string == "":
         ex_string = TCP_listen_check_4_string(string_from_tcp_ID, ex_string)
+        time.sleep(0.02)
         # print("listen to port for command...")
     return ex_string
 
@@ -430,6 +431,7 @@ def wait_for_keypoints(queuekp):
         try:
             keypoints = queuekp.get(False)
 
+
         except queue.Empty:
             # print("no KP data aviable: queue empty")
 
@@ -437,7 +439,6 @@ def wait_for_keypoints(queuekp):
             #print("q empty")
             time.sleep(0.02)
             pass
-
 
 
         return keypoints, presence
@@ -1122,7 +1123,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
                     sender.send_status(21011, compared_count, 5, 'localhost')
                     #print("no people no sending stage")
                     time.sleep(0.05)
-                    print("no man in the sky")
+
                 time.sleep(seconds_eva)
 
 
