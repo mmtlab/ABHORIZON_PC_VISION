@@ -671,6 +671,7 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                     # converting LM to KP
                     if results.pose_landmarks is None:
                         kp = 0
+                        time.sleep(0.01)
 
                     else:
                         #svuoto queue
