@@ -16,7 +16,7 @@ import logging
 
 
 data_collection=True
-default_cooldown = 60
+default_cooldown = 40
 logging3 = logging.getLogger('EVA')
 logging3.setLevel(logging.INFO)
 fh3 = logging.FileHandler('./log/EVA.log')
