@@ -527,9 +527,6 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                             logging2.info("EXERCISE camera: %s ", camera)
                             continue
 
-
-
-
                     else:
                         dictionary = {}
                         ex_string = ""
@@ -704,13 +701,23 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                     try:
                         while not q.empty():
                             bit = q.get()
+                    except:
+                        logging2.error("ERROR ON GET/WHILEEMPTY queue ")
+                        logging2.error("put keypoint error, q: %s", q)
+                        logging2.error("put keypoint error, kp: %s", kp)
+                        logging2.error("put keypoint error, size:", q.qsize())
+                        logging2.error("put keypoint error, empty?:", q.empty())
+                        logging2.error("put keypoint error, full?:", q.full())
+                        logging2.error("time", datetime.now())
+                    try:
 
                         if q.full():
                             logging2.error("impossible to insert data in full queue")
+
                         else:
                             q.put(kp)
                     except:
-                        logging2.error("ERROR ON all queue ")
+                        logging2.error("ERROR ON PUT/FULLQ queue ")
                         logging2.error("put keypoint error, q: %s",q)
                         logging2.error("put keypoint error, kp: %s", kp)
                         logging2.error("put keypoint error, size:", q.qsize())
