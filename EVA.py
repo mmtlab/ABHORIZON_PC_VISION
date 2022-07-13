@@ -952,6 +952,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
     seconds_eva = 0.01
 
     while True:
+        time.sleep(seconds_eva)
 
 
 
@@ -1124,7 +1125,7 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
                     #print("no people no sending stage")
                     time.sleep(0.05)
 
-                time.sleep(seconds_eva)
+
 
 
 
