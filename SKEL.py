@@ -572,6 +572,7 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
 
                 else:
                     success, image = cap.read()
+
                     #image = undistorter.undistortOPT(image)
                     #image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
@@ -642,8 +643,12 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                         seconds_pre_proc = end_pre_proc - start
 
                     # start2 = time.time()
-                    results = pose.process(sti)
-                    # end2 = time.time()
+                    try:
+                        results = pose.process(sti)
+                    except:
+                        logging2.error("POSE ERROR")
+
+                                # end2 = time.time()
                     # seconds2 = end2 - start2
                     # print("p", results.pose_landmarks)
 
@@ -673,8 +678,13 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
 
                         # print("rendering...")
 
+                        try:
+                            kp = landmarks2KP(results.pose_landmarks, sti)
+                        except:
+                            logging2.error("error copnverting landmarks")
+                            kp = 0
 
-                        kp = landmarks2KP(results.pose_landmarks, sti)
+
                         try:
                             sti = rendering_kp_on_frame(dictionary["segments_to_render"], kp, sti)
                         except:
@@ -707,20 +717,11 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                         logging2.error("put keypoint error, full?:", q.full())
                         logging2.error("time", datetime.now())
 
-
-
-
-
                     # print("KP global found : {}".format(len(KP_global)))
-
-
-
-
-
 
                 # invio streaming
                 if sti is None:
-                    logging2.error("no image ERRORRRR")
+                    logging2.error("no image ERROR")
                 try:
                     fs.udp_frame(sti)
                 except:
@@ -744,7 +745,8 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
                         second_post_proc = end - start_post_proc
                         fps = 1 / seconds
                         pose_inference_time = seconds-(seconds_pre_proc+second_post_proc)
-                        logging2.info("FPS:{}, total:{},pose:{},preproc:{},postproc:{}".format( fps, round(seconds,4) ,round(pose_inference_time,4) ,round(seconds_pre_proc,4) ,round(second_post_proc,4) ))
+                        print("FPS:{}, total:{},pose:{},preproc:{},postproc:{}".format( fps, round(seconds,4) ,round(pose_inference_time,4) ,round(seconds_pre_proc,4) ,round(second_post_proc,4) ))
+                        #logging2.info("FPS:{}, total:{},pose:{},preproc:{},postproc:{}".format( fps, round(seconds,4) ,round(pose_inference_time,4) ,round(seconds_pre_proc,4) ,round(second_post_proc,4) ))
             cap.release()
             cap1.release()
 
@@ -753,6 +755,6 @@ def skeletonizer(KP_global, EX_global, q, user_id,dual_camera):
 
             cv2.destroyAllWindows()
     except:
-        logging2.error("skel crashed __||__/")
+        logging2.error("all skel crashed __||__/")
 
 

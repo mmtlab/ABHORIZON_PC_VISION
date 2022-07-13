@@ -946,7 +946,11 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
     ex_string_from_TCP = ""  # comando arrivato dalla tcp
     ex_string = ""  # comando letto dalla memoria
 
+    seconds_eva = 0.01
+
     while True:
+
+
 
         # time.sleep(0.5)
         # verifico l arrivo di comandi da coordinator
@@ -1031,9 +1035,10 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
                     pass
                 else:
                     config_param_dictionary = ex_string_to_config_param(ex_string,all_exercise)
-
+                #print("q eva before extraction:", q.qsize())
                 kp, presence = wait_for_keypoints(q)
                 #arrivano anche tanti elementi vuoti perche eva e piu veloce di skel
+                #print("kp from eva: ", kp)
 
 
                 if kp == 0:
@@ -1114,5 +1119,9 @@ def evaluator(EX_global, q, string_from_tcp_ID,user_id):
                 elif analysis == False:
                     sender.send_status(21011, compared_count, 5, 'localhost')
                     #print("no people no sending stage")
+                    time.sleep(0.05)
+                    print("no man in the sky")
+                time.sleep(seconds_eva)
+
 
 

@@ -80,12 +80,12 @@ def supervisor(process_ids, dual_camera):
                     #process = psutil.Process(pid)
                 else:
                     logging1.error(" pid %d does not exist ERROR!" % pid)
-                    logging1.error(" time of death %d " % datetime.now())
+                    logging1.error(" time of death {} ".format(datetime.now()))
                     process_ids.remove(pid)
                     kill_signal= True
         
         if len(process_ids) == 0:
-            logging1.info("only supervisor is alive, time: %s",datetime.now())
+            logging1.info("only supervisor is alive, time: {} ".format(datetime.now()))
             supervisor_pid = os.getpid()
             logging1.info("killstrike terminated-exiting supervisor...:%s",supervisor_pid)
             
@@ -235,7 +235,8 @@ def main():
         logging1.info("ID of EVALUATOR    -> {}".format(p2.pid))
         logging1.info("ID of LISTENER     -> {}".format(p3.pid))
         logging1.info("ID of SUPERVISOR     -> {}".format(p4.pid))
-        
+
+
 
         # controllo lo status dei processi "figli", questo e' necessario perche'
         # senza join() i processi p1, p2, p3 potrebbero terminare automaticamente
